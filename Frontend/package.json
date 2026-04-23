@@ -2,7 +2,7 @@
   "name": "smartcities",
   "version": "0.1.0",
   "private": true,
-  "proxy": "https://digital-kohat-production.up.railway.app",
+  "proxy": "https://api.kohat.online",
   "dependencies": {
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
