@@ -17,7 +17,7 @@ export const EduHomePage = () => {
         <div className="EduHomePremium">
             {showForm ? (
                 <div className="FormContainerSection">
-                    <ServiceProviderRegForm setShowform={setShowform} />
+                    <ServiceProviderRegForm setShowform={setShowform} forcedCategory="Education" />
                 </div>
             ) : (
                 <>

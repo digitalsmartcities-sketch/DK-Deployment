@@ -839,9 +839,10 @@ export const DeleteTheInst = async (req, res) => {
         const SchoolColl = selectCollection(req, "SCHOOL");
         const CollegeColl = selectCollection(req, "COLLEGE");
 
-        const admin = await AdminColl.findOne({
-            _id: new ObjectId(adminId)
-        });
+        let admin = await AdminColl.findOne({ _id: new ObjectId(adminId) });
+        if (!admin) {
+            admin = await AdminColl.findOne({ _id: adminId });
+        }
 
         if (!admin) {
             return res.status(404).json({
@@ -908,12 +909,15 @@ export const DeleteTheInst = async (req, res) => {
             (s) => s.ServiceId.toString() !== InstId.toString()
         );
 
+        let finalMessage = "Institute and its associated records deleted ✅";
+
         if (remainingServices.length === 0) {
             if (admin.IDCard) {
                 console.log(`Cleaning up Admin IDCard for ${admin.AdminEmail}`);
                 await deleteImage(admin.IDCard);
             }
             await AdminColl.deleteOne({ _id: admin._id });
+            finalMessage = "Institute, related records, and admin account permanently deleted ✅";
         } else {
             await AdminColl.updateOne(
                 { _id: admin._id },
@@ -923,11 +927,11 @@ export const DeleteTheInst = async (req, res) => {
             );
         }
 
-        const formattedData = await getUpdatedEduData(req, ServiceType);
+        const formattedData = await getUpdatedEduData(req, ServiceColl === SchoolColl ? "SCHOOL" : "COLLEGE");
 
         return res.status(200).json({
             success: true,
-            message: "Operation completed successfully",
+            message: finalMessage,
             ResponseData: formattedData
         });
 

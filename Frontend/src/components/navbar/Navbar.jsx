@@ -33,18 +33,18 @@ const rtlLanguages = ['ur', 'ps', 'sd', 'bal', 'fa', 'ar'];
 const Navbar = ({ variant }) => {
   const { customer, userData, logout } = useContext(AppContext);
   const [isOpen, setIsOpen] = useState(false);
-  
+
   // States for Services
   const [isServicesHovered, setIsServicesHovered] = useState(false);
   const [isServicesLocked, setIsServicesLocked] = useState(false);
-  
+
   // States for Language
   const [isLangHovered, setIsLangHovered] = useState(false);
   const [isLangLocked, setIsLangLocked] = useState(false);
-  
+
   const [currentLang, setCurrentLang] = useState("en");
   const navigate = useNavigate();
-  
+
   const servicesRef = useRef(null);
   const langRef = useRef(null);
 
@@ -57,10 +57,18 @@ const Navbar = ({ variant }) => {
     };
 
     const googTrans = getCookie('googtrans');
+    const savedLang = localStorage.getItem('selectedLang');
+
+    let detectedLang = "en";
     if (googTrans) {
-      const lang = googTrans.split('/').pop();
-      setCurrentLang(lang);
-      document.body.dir = rtlLanguages.includes(lang) ? 'rtl' : 'ltr';
+      detectedLang = googTrans.split('/').pop();
+    } else if (savedLang) {
+      detectedLang = savedLang;
+    }
+
+    if (detectedLang) {
+      setCurrentLang(detectedLang);
+      document.body.dir = rtlLanguages.includes(detectedLang.toLowerCase()) ? 'rtl' : 'ltr';
     }
 
     // Click outside listener
@@ -79,7 +87,7 @@ const Navbar = ({ variant }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const currentLanguage = languages.find(l => l.code === currentLang) || languages[0];
+  const currentLanguage = languages.find(l => l.code.toLowerCase() === currentLang.toLowerCase()) || languages[0];
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -99,7 +107,8 @@ const Navbar = ({ variant }) => {
     const domain = window.location.hostname;
     document.cookie = `googtrans=/en/${langCode}; path=/; domain=${domain}`;
     document.cookie = `googtrans=/en/${langCode}; path=/`;
-    document.body.dir = rtlLanguages.includes(langCode) ? 'rtl' : 'ltr';
+    localStorage.setItem('selectedLang', langCode);
+    document.body.dir = rtlLanguages.includes(langCode.toLowerCase()) ? 'rtl' : 'ltr';
     setCurrentLang(langCode);
     setIsLangLocked(false);
     closeMenu();
@@ -136,7 +145,7 @@ const Navbar = ({ variant }) => {
       <nav className="navbar">
         <div className="nav-container">
           {/* LOGO */}
-          <div className="nav-logo">
+          <div className="nav-logo" onClick={() => navigate("/")}>
             <img src={navlogo} alt="Logo" className="logo-img" />
             <h2>DIGITAL SMART CITIES HUB</h2>
           </div>
@@ -180,19 +189,19 @@ const Navbar = ({ variant }) => {
             <a onClick={() => { navigate("/ContactUs"); closeMenu(); }}>Contact Us</a>
 
             {/* LANGUAGE SWITCHER */}
-            <div 
+            <div
               className="dropdown lang-switcher"
               ref={langRef}
               onMouseEnter={handleLangEnter}
               onMouseLeave={handleLangLeave}
             >
-              <button className="lang-btn" onClick={toggleLangClick}>
+              <button type="button" className="lang-btn" onClick={toggleLangClick}>
                 <Globe size={18} />
                 <span>{currentLanguage.name}</span>
                 <ChevronDown size={14} />
-               </button>
-              
-              <div 
+              </button>
+
+              <div
                 className={`dropdown-menu lang-menu ${langOpen ? "show" : ""}`}
                 onMouseEnter={handleLangEnter}
                 onMouseLeave={handleLangLeave}
@@ -208,8 +217,8 @@ const Navbar = ({ variant }) => {
             {
               (variant === "dashboard") ?
                 <div className="nav-buttons">
-                  <button className="btn sign" onClick={() => { closeMenu(); alert("You can access by upgrading your payment plan.") }}>Management System</button>
-                  <button className="btn log" onClick={handleLogout}>Logout</button>
+                  <button type="button" className="btn sign" onClick={() => { closeMenu(); alert("You can access by upgrading your payment plan.") }}>Management System</button>
+                  <button type="button" className="btn log" onClick={handleLogout}>Logout</button>
                 </div>
                 :
                 (variant === "SuperAdmin")
@@ -218,12 +227,12 @@ const Navbar = ({ variant }) => {
                   :
                   (!customer && !userData) ? (
                     <div className="nav-buttons">
-                      <button className="btn sign" onClick={() => { closeMenu(); navigate("/user/register"); }}>Sign Up</button>
-                      <button className="btn log" onClick={() => { closeMenu(); navigate("/user/login") }}>Log In</button>
+                      <button type="button" className="btn sign" onClick={() => { closeMenu(); navigate("/user/register"); }}>Sign Up</button>
+                      <button type="button" className="btn log" onClick={() => { closeMenu(); navigate("/user/login") }}>Log In</button>
                     </div>
                   ) : (
                     <div className="nav-buttons">
-                      <button className="btn log" onClick={handleLogout}>Logout</button>
+                      <button type="button" className="btn log" onClick={handleLogout}>Logout</button>
                     </div>
                   )
             }

@@ -26,7 +26,7 @@ export const baseTemplate = (content) => `
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
         .header {
-            background: linear-gradient(135deg, #0d6efd 0%, #0046b8 100%);
+            background: linear-gradient(135deg, #1f8e5c 0%, #15a866ff 100%);
             padding: 40px 20px;
             text-align: center;
             color: #ffffff;
@@ -52,7 +52,7 @@ export const baseTemplate = (content) => `
         .button {
             display: inline-block;
             padding: 14px 30px;
-            background-color: #0d6efd;
+            background-color: #1f8e5c;
             color: #ffffff;
             text-decoration: none;
             border-radius: 6px;
@@ -62,7 +62,7 @@ export const baseTemplate = (content) => `
         .otp-code {
             font-size: 36px;
             font-weight: 800;
-            color: #0d6efd;
+            color: #1f8e5c;
             letter-spacing: 8px;
             background-color: #f0f7ff;
             padding: 20px;
@@ -72,7 +72,7 @@ export const baseTemplate = (content) => `
             border: 1px solid #cce3ff;
         }
         .highlight {
-            color: #0d6efd;
+            color: #1f8e5c;
             font-weight: 600;
         }
     </style>

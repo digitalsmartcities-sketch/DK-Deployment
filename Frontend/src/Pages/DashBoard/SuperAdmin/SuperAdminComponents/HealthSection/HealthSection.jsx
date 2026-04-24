@@ -16,7 +16,7 @@ export const HealthSection = () => {
     useEffect(() => {
         if (activeTab === "NEW_REQUESTS") {
             ApiCall.GetHealthNewReqTabData(activeTab, setRowData);
-        } else if (["SPECIALIST", "PHARMACY"].includes(activeTab)) {
+        } else if (activeTab === "SPECIALIST") {
             ApiCall.GetHealthTabData(activeTab, setRowData);
         }
     }, [activeTab]);
@@ -39,9 +39,7 @@ export const HealthSection = () => {
             content = <SpecialistDataTable data={rowData} setData={setRowData} setActiveTab={setActiveTab} />;
             break;
 
-        case "PHARMACY":
-            content = <PharmacyDataTable data={rowData} setData={setRowData} setActiveTab={setActiveTab} />;
-            break;
+
 
         case "AdminForm":
             content = (
@@ -59,7 +57,6 @@ export const HealthSection = () => {
 
     return (
         <section className="SA_content_body">
-            <ToastContainer />
             <div className="SA_table_controls">
                 <div className="SA_sub_nav">
                     <button
@@ -68,12 +65,7 @@ export const HealthSection = () => {
                     >
                         Specialists
                     </button>
-                    <button
-                        className={activeTab === "PHARMACY" ? "SA_active" : ""}
-                        onClick={() => setActiveTab("PHARMACY")}
-                    >
-                        Pharmacies
-                    </button>
+
                     <button
                         className={activeTab === "NEW_REQUESTS" ? "SA_active" : ""}
                         onClick={() => setActiveTab("NEW_REQUESTS")}
@@ -135,10 +127,9 @@ const HealthActionButtons = ({
     };
 
     const handleRequestReject = () => {
-        if (window.confirm("Are you sure you want to reject this request?")) {
-            ApiCall.UpdateServiceProviderRequestStatus(
+        if (window.confirm("Are you sure you want to delete this request?")) {
+            ApiCall.DeleteHealthRequest(
                 data._id,
-                "rejected",
                 setData
             );
         }
@@ -146,7 +137,7 @@ const HealthActionButtons = ({
 
     return (
         <div className="SA_row_actions">
-
+            <ToastContainer />
             {type === "REQUEST" ? (
                 <>
                     <button
@@ -248,18 +239,26 @@ const SpecialistDataTable = ({ data, setData }) => {
 
                         <td>
                             <div className="SA_contact_stack">
-                                <div className="SA_contact_item">
-                                    <FiMail /> <span>{admin.email}</span>
-                                </div>
-                                <div className="SA_contact_item">
-                                    <FiMapPin /> <span>{admin.location}</span>
-                                </div>
-                                <div className="SA_contact_item">
-                                    <FaWhatsapp /> <span><a href={`https://wa.me/${admin.whatsapp}`} target="_blank">{admin.whatsapp}</a></span>
-                                </div>
-                                <div className="SA_contact_item">
-                                    <FiPhone /> <span>{admin.phonenumber}</span>
-                                </div>
+                                {admin.email && (
+                                    <div className="SA_contact_item">
+                                        <FiMail /> <span>{admin.email}</span>
+                                    </div>
+                                )}
+                                {admin.location && (
+                                    <div className="SA_contact_item">
+                                        <FiMapPin /> <span>{admin.location}</span>
+                                    </div>
+                                )}
+                                {admin.whatsapp && (
+                                    <div className="SA_contact_item">
+                                        <FaWhatsapp /> <span><a href={`https://wa.me/${admin.whatsapp}`} target="_blank">{admin.whatsapp}</a></span>
+                                    </div>
+                                )}
+                                {admin.phonenumber && (
+                                    <div className="SA_contact_item">
+                                        <FiPhone /> <span>{admin.phonenumber}</span>
+                                    </div>
+                                )}
                             </div>
                         </td>
 
@@ -295,92 +294,7 @@ const SpecialistDataTable = ({ data, setData }) => {
     );
 };
 
-/* ---------------- PHARMACY DATA TABLE ---------------- */
 
-const PharmacyDataTable = ({ data, setData }) => {
-    if (!data || data.length === 0)
-        return <p className="no-data">No active pharmacies found.</p>;
-
-    return (
-        <table className="SA_custom_table">
-            <thead>
-                <tr>
-                    <th>Pharmacy Name</th>
-                    <th>Contact & Location</th>
-                    <th>Status & Rating</th>
-                    <th>Payment Plan</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {data.map((admin, i) => (
-                    <tr className="SA_table_row" key={i}>
-                        <td>
-                            <div className="SA_admin_profile">
-                                <div className="SA_row_avatar">
-                                    {(admin.adminName || "A").charAt(0)}
-                                </div>
-                                <div>
-                                    <p className="SA_admin_name" style={{ fontSize: '15px' }}>{admin.serviceName}</p>
-                                    <span className="SA_inst_label">Managed by: {admin.adminName}</span>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td>
-                            <div className="SA_contact_stack">
-                                <div className="SA_contact_item">
-                                    <FiMail /> <span>{admin.email}</span>
-                                </div>
-                                <div className="SA_contact_item">
-                                    <FiPhone /> <span>{admin.contactNumber || admin.phonenumber}</span>
-                                </div>
-                                <div className="SA_contact_item">
-                                    <FiMapPin /> <span>{admin.location}</span>
-                                </div>
-                                <div className="SA_contact_item">
-                                    <FaWhatsapp size={14} /> <a href={`https://wa.me/${admin.whatsapp}`} target="_blank" rel="noopener noreferrer">{admin.whatsapp}</a>
-                                </div>
-                            </div>
-                        </td>
-
-                        <td>
-                            <div className="SA_contact_stack">
-                                <span className={`status-badge ${admin.pharmacyStatus?.toLowerCase()}`}>
-                                    {admin.pharmacyStatus || "Open"}
-                                </span>
-                                <span className="health-rating-badge">
-                                    ⭐ {admin.rating || 0} / 5
-                                </span>
-                            </div>
-                        </td>
-
-                        <td>
-                            <select
-                                value={admin.PaymentPlan}
-                                className={`SA_plan_badge ${admin.PaymentPlan?.toLowerCase()}`}
-                                onChange={(e) => ApiCall.UpdateHealthServicePlan(admin.adminId, admin.serviceId, "PHARMACY", e.target.value, setData)}
-                            >
-                                <option value="FREE">Free</option>
-                                <option value="BASIC">Basic</option>
-                                <option value="PREMIUM">Premium</option>
-                                <option value="ENTERPRISE">Enterprise</option>
-                            </select>
-                        </td>
-
-                        <td>
-                            <HealthActionButtons
-                                type="PHARMACY"
-                                data={admin}
-                                setData={setData}
-                            />
-                        </td>
-                    </tr>
-                ))}
-            </tbody>
-        </table>
-    );
-};
 
 /* ---------------- HEALTH REQUEST TABLE ---------------- */
 

@@ -15,7 +15,7 @@ healthSuperAdminRoutes.post("/DeleteTheHealthService", AdminMW, healthSuperAdmin
 
 healthSuperAdminRoutes.post("/ChangeHealthAdminVerificationState", AdminMW, healthSuperAdminCont.ChangeHealthAdminVerificationState);
 
-// healthSuperAdminRoutes.post("/UpdateServiceProviderRequestStatus", AdminMW, healthSuperAdminCont.UpdateServiceProviderRequestStatus);
+healthSuperAdminRoutes.post("/DeleteHealthRequest", AdminMW, healthSuperAdminCont.DeleteHealthRequest);
 
 healthSuperAdminRoutes.put("/updateTheHealthServicePlan", AdminMW, healthSuperAdminCont.UpdateHealthServicePlan);
 healthSuperAdminRoutes.post("/GetHealthNotificationCounts", AdminMW, healthSuperAdminCont.GetHealthNotificationCounts);

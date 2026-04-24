@@ -18,7 +18,7 @@ export const enrollmentStatusTemplate = (courseName, status, reason = "", whatsa
         ${isApproved && whatsappGroupLink ? `
             <div style="text-align: center; margin: 30px 0;">
                 <p>Welcome to the batch! Join the official WhatsApp group to get started:</p>
-                <a href="${whatsappGroupLink}" class="button" style="background-color: #25D366; border: none;">Join WhatsApp Group</a>
+                <a href="${whatsappGroupLink}" class="button" style="color: #25D366; border: none;">Join WhatsApp Group</a>
             </div>
         ` : ''}
 

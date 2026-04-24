@@ -24,7 +24,7 @@ export const FoodHomePage = () => {
             <header className="FoodHeroPremium">
                 <div className="HeroOverlay">
                     <div className="HeroContent">
-                        <span className="HeroBadge">KPK's Premier Food Network</span>
+                        <span className="fd-HeroBadge">KPK's Premier Food Network</span>
                         <h1>Taste the Essence of <strong>KPK Heritage</strong></h1>
                         <p className="HeroLead">
                             From the spicy streets of Peshawar to the cozy cafes of Kohat,
@@ -37,7 +37,7 @@ export const FoodHomePage = () => {
                             <button className="btn-secondary" onClick={() => setShowform(!showForm)}>
                                 {showForm ? "Close Registration" : "Join as Merchant"}
                             </button>
-                            <button className="fd-hero-admin-login-btn" style={{ marginLeft: '12px', background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.6)', padding: '12px 28px', borderRadius: '30px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.3s ease' }} onClick={() => navigate('/food/admin')}>
+                            <button className="fd-hero-admin-login-btn" onClick={() => navigate('/food/admin')}>
                                 Admin Login
                             </button>
                         </div>
@@ -87,9 +87,9 @@ export const FoodHomePage = () => {
                     <p>Select a category to find the best dining spots tailored to your mood.</p>
                 </div>
 
-                <section className="CategoriesGridPremium">
+                <section className="fd-CategoriesGridPremium">
                     {Food_categories.map((v, i) => (
-                        <div className="CategoryCardPremium" key={i} onClick={() => navigate(v.link)}>
+                        <div className="fd-CategoryCardPremium" key={i} onClick={() => navigate(v.link)}>
                             <div className="CategoryThumb">
                                 <img src={v.img} alt={v.title} />
                                 <div className="CategoryIcon">
@@ -108,8 +108,8 @@ export const FoodHomePage = () => {
 
             {/* PARTNER BANNER (If form is not open) */}
             {!showForm && (
-                <section className="PartnerCta">
-                    <div className="CtaContent">
+                <section className="fd-PartnerCta">
+                    <div className="fd-CtaContent">
                         <h2>Your Restaurant Deserves the <strong>Spotlight</strong></h2>
                         <p>Partner with us today and take your culinary business to new heights.</p>
                         <button className="cta-btn" onClick={() => {

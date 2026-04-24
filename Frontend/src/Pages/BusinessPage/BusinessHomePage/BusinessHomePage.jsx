@@ -20,8 +20,10 @@ export const BusinessHomePage = () => {
                 <BusinessRegisterForm setShowform={setShowform} />
             ) : (
                 <section className="pg-sec">
-                    <button onClick={() => setShowform(true)} className="rsgrt-btn">Registration</button>
-                    <button onClick={() => navigate("admin-login")} className="AdminLogin-btn">Admin Login</button>
+                    <div className="business-actions-container">
+                        <button onClick={() => setShowform(true)} className="business-btn btn-register">Business Registration</button>
+                        <button onClick={() => navigate("admin-login")} className="business-btn btn-login">Admin Login</button>
+                    </div>
 
                     <div className="content-cont">
                         <h1>Connect with Top <strong>Businesses</strong> in Kohat</h1>

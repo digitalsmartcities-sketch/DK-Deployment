@@ -55,7 +55,7 @@ export const OnlineCoursesPage = () => {
                             <button className="OC-btn-browse-courses" onClick={scrollToCourses}>
                                 {settings?.hero?.ctaText || "Browse Courses"}
                             </button>
-                            <Link to="/about" className="OC-btn-learn-more">
+                           <Link to="/AboutUs" className="OC-btn-learn-more">
                                 Why Choose Us?
                             </Link>
                         </div>
@@ -162,7 +162,12 @@ export const OnlineCoursesPage = () => {
                     ))}
                 </div>
 
-                {filteredCourses.length === 0 && <p className="OC-no-courses">No courses found matching your criteria.</p>}
+                {filteredCourses.length === 0 && (
+                    <div className="OC-no-results">
+                        <h3>Catalog Under Refresh</h3>
+                        <p>We are currently updating our course offerings to bring you the best learning experiences. New courses will be available shortly.</p>
+                    </div>
+                )}
             </div>
         </section>
     );

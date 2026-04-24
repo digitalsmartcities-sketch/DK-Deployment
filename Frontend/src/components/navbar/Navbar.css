@@ -4,18 +4,20 @@
   background-color: #fff;
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
   position: sticky;
- 
+
   top: 0 !important;
   z-index: 1000;
   font-family: "Poppins", sans-serif;
 }
+
 .dropdown {
   position: relative;
 }
 
 .dropdown-menu {
   position: absolute;
-  top: 100%; /* directly below */
+  top: 100%;
+  /* directly below */
   left: 0;
   background-color: #0b0b0b;
   border-radius: 4px;
@@ -53,6 +55,7 @@
 
 /* ===== LOGO ===== */
 .nav-logo {
+  cursor: pointer;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -61,7 +64,7 @@
 .logo-img {
   height: 54px;
   width: 100px;
- 
+
 }
 
 .nav-logo h2 {
@@ -299,17 +302,26 @@
     box-shadow: none;
     border-radius: 0;
 
-    display: block;
+    display: none;
     transform: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: auto;
+    transition: none;
+  }
+
+  .dropdown-menu.show {
+    display: flex !important;
+    flex-direction: column !important;
     opacity: 1 !important;
     visibility: visible !important;
-    z-index: auto;
   }
 
   .dropdown-menu a {
     width: 100%;
+    display: block;
     text-align: center;
-    padding: 10px 0;
+    padding: 12px 0;
     color: #c9f0d3;
   }
 
@@ -342,6 +354,7 @@
     right: -100%;
     opacity: 0;
   }
+
   to {
     right: 20px;
     opacity: 1;
@@ -352,10 +365,12 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
 }
+
 /* ================= MOBILE FIX (FINAL) ================= */
 @media (max-width: 900px) {
 
@@ -438,11 +453,19 @@
     box-shadow: none;
     border-radius: 0;
 
-    display: block;
+    display: none;
     transform: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    z-index: auto;
+    transition: none;
+  }
+
+  .dropdown-menu.show {
+    display: flex !important;
+    flex-direction: column !important;
     opacity: 1 !important;
     visibility: visible !important;
-    z-index: auto;
   }
 
   .dropdown-menu a {
@@ -554,7 +577,13 @@
 }
 
 [dir="rtl"] .nav-links {
-  flex-direction: row-reverse !important;
+  flex-direction: row-reverse;
+}
+
+@media (max-width: 900px) {
+  [dir="rtl"] .nav-links {
+    flex-direction: column !important;
+  }
 }
 
 [dir="rtl"] .dropdown-menu {
@@ -576,12 +605,15 @@
 @media (max-width: 900px) {
   .lang-switcher {
     width: 100%;
+    display: flex !important;
     justify-content: center;
     margin: 10px 0;
+    padding: 0;
   }
 
   .lang-btn {
     width: 80%;
+    margin: 0 auto;
     justify-content: center;
     padding: 10px;
   }
@@ -594,39 +626,50 @@
     box-shadow: none;
     border: none;
     background: #f8fafc !important;
+    display: none;
+  }
+
+  .lang-menu.show {
+    display: flex !important;
+    flex-direction: column !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
 
   .lang-menu a {
     text-align: center !important;
+    width: 100%;
+    display: block;
+    padding: 12px 0 !important;
   }
 }
 
 /* ===== GOOGLE TRANSLATE CLEANUP ===== */
 /* Hide the Google Translate standard banner at the top */
-.goog-te-banner-frame.skiptranslate, 
+.goog-te-banner-frame.skiptranslate,
 .goog-te-gadget-icon,
 .goog-te-gadget-simple span {
-    display: none !important;
+  display: none !important;
 }
 
 body {
-    top: 0px !important;
+  top: 0px !important;
 }
 
 .goog-te-menu-value {
-    display: none !important;
+  display: none !important;
 }
 
 /* Ensure the Google Translate gadget container is hidden as we use custom UI */
 #google_translate_element {
-    display: none !important;
+  display: none !important;
 }
 
 /* Prevent Google Translate from adding whitespace at the top */
 .skiptranslate {
-    display: none !important;
+  display: none !important;
 }
 
 iframe.goog-te-menu-frame {
-    z-index: 10001 !important;
+  z-index: 10001 !important;
 }

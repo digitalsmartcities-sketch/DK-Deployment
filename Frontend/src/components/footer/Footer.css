@@ -71,7 +71,7 @@ margin-left:-30px !important;
 
 .contact-info p {
   display: flex;
-  margin-left: 10px;
+  margin-inline-start: 10px;
   margin-top: 1px;
   font-size: 0.95rem;
   color: #cfcfcf;
@@ -79,7 +79,7 @@ margin-left:-30px !important;
 
 .footer-icon {
   color:  #1f8e5c;
-  margin-right: 10px;
+  margin-inline-end: 10px;
   font-size: 1rem;
 }
 
@@ -100,15 +100,14 @@ margin-left:-30px !important;
   padding: 0;
 }
 
-.footer-links li {
+.footer-links li a {
   color: #cfcfcf;
-  margin-bottom: 8px;
-  cursor: pointer;
+  text-decoration: none;
   transition: color 0.3s;
 }
 
-.footer-links li:hover {
-  color:  #1f8e5c;
+.footer-links li:hover a {
+  color: #1f8e5c;
 }
 
 /* RIGHT SECTION */

@@ -41,7 +41,7 @@ const Location = () => {
     <section className="location-section" id="location">
       <div className="location-container">
         {/* ===== LEFT: LOGIN FORM ===== */}
-        <div className="login-box">
+        {/* <div className="login-box">
           <h2>Member Login</h2>
           <form onSubmit={handleSubmit}>
             <div className="input-group">
@@ -76,7 +76,7 @@ const Location = () => {
               Don’t have an account? <a href="#">Sign up</a>
             </p>
           </form>
-        </div>
+        </div> */}
 
         {/* ===== RIGHT: MAP ===== */}
         <div className="map-box">

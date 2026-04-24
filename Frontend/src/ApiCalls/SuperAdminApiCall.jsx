@@ -156,7 +156,10 @@ export const GetTheTabData = (dataOf, setRowData) => {
             } else {
                 toast.error(res.data.message);
             }
-        }).catch(() => { });
+        }).catch((err) => {
+            console.error("GetTheTabData Error:", err);
+            toast.error("Failed to fetch data");
+        });
 };
 
 export const handleGetRecords = (adminId, InstId, setData, setActiveTab) => {
@@ -184,7 +187,10 @@ export const ChangePaymentPlan = (adminId, InstId, setData, newPlan, ServiceType
             } else {
                 toast.error(res.data.message);
             }
-        }).catch(() => { });
+        }).catch((err) => {
+            console.error("ChangePaymentPlan Error:", err);
+            toast.error("Failed to update payment plan");
+        });
 };
 
 export const ChangeInstState = (adminId, InstId, ServiceType, setData) => {
@@ -196,21 +202,24 @@ export const ChangeInstState = (adminId, InstId, ServiceType, setData) => {
             } else {
                 toast.error(res.data.message);
             }
-        }).catch(() => {});
+        }).catch((err) => {
+            console.error("ChangeInstState Error:", err);
+            toast.error("Failed to change state");
+        });
 };
 
 export const DeleteTheInst = (adminId, InstId, setData) => {
     axios.post(`${mainURL}/DeleteTheInst`, { adminId, InstId }, { withCredentials: true })
         .then((res) => {
             if (res.data.success) {
-                console.log("Line 204 in SuperAdminApiCall.jsx in DeleteTheInst", res.data.ResponseData)
                 toast.success(res.data.message);
                 setData(res.data.ResponseData);
             } else {
                 toast.error(res.data.message);
             }
         }).catch((err) => {
-            console.log("Line 211 in SuperAdminApiCall.jsx in DeleteTheInst Error = ", err);
+            console.error("DeleteTheInst Error:", err);
+            toast.error("Failed to delete institute");
         });
 };
 
@@ -223,7 +232,10 @@ export const ChangeAdminVerificationState = (adminId, setData) => {
             } else {
                 toast.error(res.data.message);
             }
-        }).catch(() => { });
+        }).catch((err) => {
+            console.error("ChangeAdminVerificationState Error:", err);
+            toast.error("Failed to update verification status");
+        });
 };
 
 export const deleteRequest = (id, setData) => {
@@ -235,7 +247,10 @@ export const deleteRequest = (id, setData) => {
             } else {
                 toast.error(res.data.message);
             }
-        }).catch(() => { });
+        }).catch((err) => {
+            console.error("deleteRequest Error:", err);
+            toast.error("Failed to delete request");
+        });
 };
 
 export const ApproveAdmissionAndForward = (payload, setRows) => {
@@ -503,6 +518,21 @@ export const UpdateBusinessStatus = (id, status, fromCollection, fetchTabData) =
             } else {
                 toast.error(res.data.message);
             }
+        });
+};
+
+export const DeleteHealthRequest = (reqId, setData) => {
+    axios.post(`${mainURL}/DeleteHealthRequest`, { reqId }, { withCredentials: true })
+        .then((res) => {
+            if (res.data.success) {
+                toast.success(res.data.message);
+                setData(res.data.ResponseData);
+            } else {
+                toast.error(res.data.message);
+            }
+        }).catch((err) => {
+            console.error("DeleteHealthRequest error:", err);
+            toast.error("Failed to delete request");
         });
 };
 

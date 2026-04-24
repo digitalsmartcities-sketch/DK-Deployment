@@ -77,7 +77,6 @@ export const BusinessSection = () => {
 
     return (
         <section className="SA_content_body">
-            <ToastContainer />
             <div className="SA_table_controls">
                 <div className="SA_sub_nav" style={{ overflowX: "auto", display: "flex", gap: "10px" }}>
                     {tabs.map((tab) => (

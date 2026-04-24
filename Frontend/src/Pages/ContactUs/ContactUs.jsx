@@ -1,5 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./ContactUs.css";
+import axios from "axios";
+import { toast } from "react-toastify";
+import API_BASE_URL from "../../config";
 import {
   FaMapMarkerAlt,
   FaPhoneAlt,
@@ -9,7 +12,6 @@ import {
   FaRegEnvelope,
   FaPenFancy,
   FaFacebookF,
-  FaTwitter,
   FaYoutube,
   FaLinkedinIn,
   FaInstagram,
@@ -34,6 +36,8 @@ const ContactUs = () => {
     subject: "",
     message: ""
   });
+
+  let [formSubmitted, setFormSubmitted] = useState(false);
 
   useEffect(() => {
     if (userData) {
@@ -61,9 +65,30 @@ const ContactUs = () => {
     return () => observer.disconnect();
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert("Your message has been sent successfully!");
+    setFormSubmitted(true);
+    try {
+      const response = await axios.post(`${API_BASE_URL}/contact`, formData);
+      if (response.data.success) {
+        toast.success("Your message has been sent successfully!");
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          phone: "",
+          subject: "",
+          message: ""
+        });
+      } else {
+        toast.error(response.data.message || "Failed to send message.");
+      }
+    } catch (error) {
+      console.error("Submission error:", error);
+      toast.error(error.response?.data?.message || "Something went wrong. Please try again.");
+    } finally {
+      setFormSubmitted(false);
+    }
   };
 
   return (
@@ -73,9 +98,11 @@ const ContactUs = () => {
       {/* HERO SECTION */}
       <section className="contact-hero fade-section">
         <div className="hero-left">
-          <h1>Contact Us</h1>
-          <p>Reach out anytime. We’re here to provide the best support and guidance.</p>
-          <button className="hero-btn">Call Us Now</button>
+          <h1>Get in <strong>Touch</strong></h1>
+          <p>Have questions? We're here to help. Reach out to our team for support, inquiries, or just to say hello.</p>
+          <button className="hero-btn" onClick={() => window.scrollTo({ top: document.querySelector('.contact-form-wrapper').offsetTop - 100, behavior: 'smooth' })} >
+            Send a Message
+          </button>
         </div>
         <div className="hero-right">
           <div className="hero-phone">
@@ -83,20 +110,16 @@ const ContactUs = () => {
           </div>
         </div>
 
-        {/* 7 Floating Hero Icons */}
+        {/* Floating Background Icons */}
         <FaLaptop className="hero-icon icon1" />
         <FaEnvelope className="hero-icon icon2" />
-        <FaMobileAlt className="hero-icon icon3" />
-        <FaRegEnvelope className="hero-icon icon4" />
-        <FaPenFancy className="hero-icon icon5" />
-        <FaPhoneAlt className="hero-icon icon6" />
-        <FaClock className="hero-icon icon7" />
+        <FaPhoneAlt className="hero-icon icon3" />
       </section>
 
       {/* CONTACT FORM */}
       <section className="contact-form-wrapper fade-section">
         <h2 className="form-headingg">
-          <span></span>Send Us a Message
+          Send Us a <strong>Message</strong>
         </h2>
 
         <form onSubmit={handleSubmit}>
@@ -104,39 +127,72 @@ const ContactUs = () => {
           <div className="form-row">
             <div className="form-input">
               <FaUser />
-              <input type="text" placeholder="First Name" value={formData.firstName} onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} required />
+              <input 
+                type="text" 
+                placeholder="First Name" 
+                value={formData.firstName} 
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })} 
+                required 
+              />
             </div>
             <div className="form-input">
               <FaUser />
-              <input type="text" placeholder="Last Name" value={formData.lastName} onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} required />
+              <input 
+                type="text" 
+                placeholder="Last Name" 
+                value={formData.lastName} 
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })} 
+                required 
+              />
             </div>
           </div>
           <div className="form-row">
             <div className="form-input">
               <FaRegEnvelope />
-              <input type="email" placeholder="Email Address" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
+              <input 
+                type="email" 
+                placeholder="Email Address" 
+                value={formData.email} 
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                required 
+              />
             </div>
             <div className="form-input">
               <FaPhoneAlt />
-              <input type="text" placeholder="Contact Number" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required />
+              <input 
+                type="text" 
+                placeholder="Contact Number" 
+                value={formData.phone} 
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
+                required 
+              />
             </div>
           </div>
           <div className="form-input full-width">
             <FaPenFancy />
-            <input type="text" placeholder="Subject" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} required />
+            <input 
+              type="text" 
+              placeholder="Subject" 
+              value={formData.subject} 
+              onChange={(e) => setFormData({ ...formData, subject: e.target.value })} 
+              required 
+            />
           </div>
           <div className="form-input full-width">
             <FaRegEnvelope />
-            <textarea placeholder="Your Message" rows="5" value={formData.message} onChange={(e) => setFormData({ ...formData, message: e.target.value })} required></textarea>
+            <textarea 
+              placeholder="Your Message" 
+              rows="5" 
+              value={formData.message} 
+              onChange={(e) => setFormData({ ...formData, message: e.target.value })} 
+              required 
+            ></textarea>
           </div>
-          <button type="submit" className="submit-btn">
-            Send Message
+          <button type="submit" className="submit-btn" disabled={formSubmitted}>
+            {formSubmitted ? "Sending..." : "Send Message"}
           </button>
         </form>
       </section>
-
-
-
       {/* Social Media Links */}
       <section className="dsch-pretty-social-wrapper fade-section">
         <h2 className="dsch-pretty-social-heading">
@@ -236,13 +292,6 @@ const ContactUs = () => {
           </a>
         </div>
       </section>
-
-
-
-
-
-
-
       {/* MAP */}
       <section className="contact-map-wrapper fade-section">
         <h2 className="map-heading">
@@ -258,10 +307,6 @@ const ContactUs = () => {
           ></iframe>
         </div>
       </section>
-
-
-
-
       {/* CONTACT INFO CARDS */}
       <section className="contact-info-wrapper fade-section">
         <h2 className="contactt-heading">
@@ -292,18 +337,12 @@ const ContactUs = () => {
         </div>
       </section>
 
-
-
-
       {/* EXTRA ANIMATED SECTION */}
       <section className="contact-extra-wrapper fade-section">
         <h2>Get In Touch Today!</h2>
         <p>We are ready to assist you with any inquiries. Don’t hesitate to contact us.</p>
         <div className="extra-animation"></div>
       </section>
-
-
-
       <Footer />
     </div>
   );

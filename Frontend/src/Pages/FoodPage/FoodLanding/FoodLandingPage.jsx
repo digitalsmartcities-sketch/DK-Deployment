@@ -32,6 +32,8 @@ export const FoodLandingPage = ({ id, Alldata }) => {
     // Form states for pre-filling
     const [orderForm, setOrderForm] = useState({ fullName: "", phone: "", address: "" });
     const [bookingForm, setBookingForm] = useState({ resName: "", resContact: "" });
+    const [reviewForm, setReviewForm] = useState({ name: "", comment: "" });
+    const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
 
     useEffect(() => {
         if (userData) {
@@ -44,6 +46,10 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                 resName: userData.fullName || "",
                 resContact: userData.phone || ""
             });
+            setReviewForm(prev => ({
+                ...prev,
+                name: userData.fullName || ""
+            }));
         }
     }, [userData]);
 
@@ -87,7 +93,7 @@ export const FoodLandingPage = ({ id, Alldata }) => {
 
     const item = normalizeService(dbItem || staticItem || {});
     const serviceId = item.id || item._id || id;
-    
+
     const timingString = item.timings?.opening || item.quickInfo?.timings?.opening || item.quickInfo?.timings?.timing || "";
     const derivedIsOpen = isCurrentlyOpen(timingString);
 
@@ -222,9 +228,16 @@ export const FoodLandingPage = ({ id, Alldata }) => {
 
     const handleReviewSubmit = (e) => {
         e.preventDefault();
+        
+        if (!serviceId || String(serviceId).length !== 24) {
+            return toast.info("Reviews are only available for verified community listings.");
+        }
+
         const rating = selectedRating;
-        const comment = e.target.comment.value;
-        const name = e.target.reviewerName.value;
+        const { name, comment } = reviewForm;
+
+        if (!name) return toast.warning("Please provide your name.");
+        if (isReviewSubmitting) return;
 
         const reviewObj = {
             id: Date.now(),
@@ -235,8 +248,10 @@ export const FoodLandingPage = ({ id, Alldata }) => {
             img: userData?.img || "https://images.pexels.com/photos/771742/pexels-photo-771742.jpeg"
         };
 
+        setIsReviewSubmitting(true);
         ChangeRatingData(reviewObj, serviceId, (newRatingData, newReviews) => {
-            e.target.reset();
+            setIsReviewSubmitting(false);
+            setReviewForm({ name: userData?.fullName || "", comment: "" });
             setSelectedRating(5);
             setDbItem(prev => ({
                 ...prev,
@@ -300,9 +315,7 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                     </div>
                     <h1>{item.name}</h1>
                     <p className="tagline">{item.tagline}</p>
-                    <div className="hero-actions">
-                        <button className="back-btn" onClick={() => navigate(-1)}>Back to List</button>
-                    </div>
+                    <button className="fd-back-btn" onClick={() => navigate(-1)}>Back to List</button>
                 </div>
             </div>
 
@@ -453,8 +466,8 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                                                                 </div>
                                                             </div>
                                                         )}
-                                                        <button 
-                                                            className="AddToCartBtn" 
+                                                        <button
+                                                            className="AddToCartBtn"
                                                             onClick={() => addToCart(menuItem)}
                                                             disabled={menuItem.isAvailable === false || !derivedIsOpen}
                                                         >
@@ -482,8 +495,8 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                                                     <span className="ItemPrice">Rs. {menuItem.price}</span>
                                                 </div>
                                                 <p className="ItemDesc">{menuItem.desc || menuItem.description}</p>
-                                                <button 
-                                                    className="AddToCartBtn" 
+                                                <button
+                                                    className="AddToCartBtn"
                                                     onClick={() => addToCart(menuItem)}
                                                     disabled={menuItem.isAvailable === false || !derivedIsOpen}
                                                 >
@@ -665,19 +678,32 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                         </div>
                         <form onSubmit={handleReviewSubmit}>
                             <div className="form-row">
-                                <input type="text" name="reviewerName" placeholder="Your Name" value={userData?.fullName || ""} required />
+                                <input 
+                                    type="text" 
+                                    name="reviewerName" 
+                                    placeholder="Your Name" 
+                                    value={reviewForm.name} 
+                                    onChange={(e) => setReviewForm({ ...reviewForm, name: e.target.value })}
+                                    required 
+                                />
                                 {renderInteractiveStars()}
                             </div>
-                            <textarea name="comment" placeholder="Share your experience..." required rows="4"></textarea>
-                            <button type="submit" className="submit-review-btn">
-                                Submit Review
+                            <textarea 
+                                name="comment" 
+                                placeholder="Share your experience..." 
+                                value={reviewForm.comment}
+                                onChange={(e) => setReviewForm({ ...reviewForm, comment: e.target.value })}
+                                required 
+                                rows="4"
+                            ></textarea>
+                            <button type="submit" className="submit-review-btn" disabled={isReviewSubmitting}>
+                                {isReviewSubmitting ? "Submitting..." : "Submit Review"}
                             </button>
                         </form>
                     </div>
 
                     <div className="ReviewsGrid feedback-modern">
                         {[
-                            ...(Array.isArray(item.ratingData) ? item.ratingData : []),
                             ...(Array.isArray(item.detailedReviews) ? item.detailedReviews : []),
                             ...(Array.isArray(item.quickInfo?.parentReviews) ? item.quickInfo.parentReviews : [])
                         ].map((rev, i) => {

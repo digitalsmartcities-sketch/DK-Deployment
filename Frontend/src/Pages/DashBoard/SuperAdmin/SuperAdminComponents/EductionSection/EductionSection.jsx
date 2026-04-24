@@ -78,7 +78,6 @@ export const EducationSection = ({ notifCounts, setEduNotifCounts }) => {
 
     return (
         <section className="SA_content_body">
-            <ToastContainer />
             <div className="SA_table_controls">
                 <div className="SA_sub_nav">
                     <button
@@ -368,7 +367,7 @@ export const NewAdmissionsTable = ({ data, setData }) => {
             setProcessingId(admissionId);
             await ApiCall.ApproveAdmissionAndForward({ admissionId }, setData);
         } catch (err) {
-            alert("Server error");
+            toast.error("Server error: Failed to process request");
         } finally {
             setProcessingId("");
         }

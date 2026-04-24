@@ -128,6 +128,10 @@ export const CreateHealthCataAdmin = async (req, res) => {
         });
 
         await Admins.findByIdAndUpdate(admin._id, {
+            $set: {
+                phonenumber: admin.phonenumber || reqData.phonenumber || admin.phone || "",
+                whatsappnumber: admin.whatsappnumber || reqData.whatsappnumber || ""
+            },
             $push: {
                 Services: {
                     ServiceId: serviceDoc._id,
@@ -217,25 +221,24 @@ export const getUpdatedHealthData = async (req, type) => {
 
     return services.map(srv => ({
         adminId: srv.AdminId,
-        adminName: srv.adminInfo?.AdminName || srv.adminInfo?.fullName || "Unknown",
+        adminName: srv.adminInfo?.AdminName || srv.adminInfo?.fullName || srv.basicInfo?.adminName || "Unknown",
         serviceId: srv._id,
-        serviceName: srv?.basicInfo?.serviceName || srv.basicInfo?.pharmacyName,
+        serviceName: srv?.basicInfo?.serviceName || srv.basicInfo?.pharmacyName || srv.ServiceType,
         serviceType: srv.ServiceType,
         serviceStatus: srv.Status,
-        PaymentPlan: srv.adminInfo?.PaymentPlan || "FREE",
+        PaymentPlan: srv.adminInfo?.PaymentPlan || srv.PaymentPlan || "FREE",
         specialization: srv.basicInfo?.specialization,
         subscriptionStatus: srv.SubscriptionStatus,
         experience: srv.basicInfo?.experience,
         planExpiry: srv.adminInfo?.PlanExpiry || srv.PlanExpiry,
-        location: srv?.basicInfo?.address || srv?.basicInfo?.location,
-        rating: srv.ratingData?.average,
-        whatsapp: srv.adminInfo?.whatsappnumber,
-        phonenumber: srv.adminInfo?.phonenumber,
-        email: srv.adminInfo?.AdminEmail || "",
-        verified: srv.adminInfo?.Verified || false
+        location: srv?.basicInfo?.address || srv?.basicInfo?.location || srv.adminInfo?.location || srv.adminInfo?.address || "",
+        rating: srv.ratingData?.average || 0,
+        whatsapp: srv.adminInfo?.whatsappnumber || srv.adminInfo?.whatsapp || srv.basicInfo?.whatsapp || "",
+        phonenumber: srv.adminInfo?.phonenumber || srv.adminInfo?.phone || srv.basicInfo?.phonenumber || "",
+        email: srv.adminInfo?.AdminEmail || srv.adminInfo?.email || "",
+        verified: srv.adminInfo?.Verified || srv.verified || false
     }));
 };
-
 
 export const GetHealthNotificationCounts = async (req, res) => {
     try {
@@ -249,13 +252,14 @@ export const GetHealthNotificationCounts = async (req, res) => {
 export const ChangeHealthAdminVerificationState = async (req, res) => {
     try {
         const { adminId, serviceType } = req.body;
-        const admin = await Admins.findById(adminId);
-        if (!admin) return res.json({ success: false });
+        let admin = await Admins.findById(adminId);
+        if (!admin) {
+            admin = await Admins.findOne({ _id: adminId });
+        }
+        if (!admin) return res.json({ success: false, message: "Admin not found." });
 
         await Admins.updateOne({ _id: adminId }, { $set: { Verified: !admin.Verified } });
 
-        // Refresh and return latest data
-        // If serviceType is not provided, try to find a health service to use for refresh
         let typeToRefresh = serviceType;
         if (!typeToRefresh && admin.Services?.length > 0) {
             const healthSvc = admin.Services.find(s => s.Sector === "HEALTH");
@@ -279,7 +283,7 @@ export const ChangeHealthServiceState = async (req, res) => {
         const { adminId, serviceId, serviceType } = req.body;
         const Model = getHealthModel(serviceType);
         const service = await Model.findById(serviceId);
-        if (!service) return res.json({ success: false });
+        if (!service) return res.json({ success: false, message: "Service not found." });
         const newState = !service.Status;
         await Model.updateOne({ _id: serviceId }, { $set: { Status: newState } });
         await Admins.updateOne(
@@ -309,7 +313,12 @@ export const DeleteTheHealthService = async (req, res) => {
             return res.json({ success: false, message: "Invalid service type." });
         }
 
-        const AdminData = await Admins.findById(adminId);
+        // Robust admin lookup: try findById first, then try findOne by ID string
+        let AdminData = await Admins.findById(adminId);
+        if (!AdminData) {
+            AdminData = await Admins.findOne({ _id: adminId });
+        }
+
         if (!AdminData) {
             return res.json({ success: false, message: "Admin not found." });
         }
@@ -325,7 +334,6 @@ export const DeleteTheHealthService = async (req, res) => {
 
         await Model.deleteOne({ _id: serviceId });
 
-        // --- CASCADING CLEANUP ---
         const db = req.app.locals.db;
         const OrdersColl = db.collection(process.env.ORDERS_C || "Orders");
 
@@ -357,7 +365,7 @@ export const DeleteTheHealthService = async (req, res) => {
         const updatedData = await getUpdatedHealthData(req, serviceType);
         if (remainingServices.length > 0) {
             await Admins.updateOne(
-                { _id: adminId },
+                { _id: AdminData._id },
                 { $set: { Services: remainingServices } }
             );
             res.json({ success: true, message: "Service and its associated records deleted ✅", ResponseData: updatedData });
@@ -365,7 +373,7 @@ export const DeleteTheHealthService = async (req, res) => {
             if (AdminData.IDCard) {
                 await deleteImage(AdminData.IDCard);
             }
-            await Admins.deleteOne({ _id: adminId });
+            await Admins.deleteOne({ _id: AdminData._id });
             res.json({ success: true, message: "Service, related records, and admin account permanently deleted ✅", ResponseData: updatedData });
         }
     } catch (error) {
@@ -378,6 +386,13 @@ export const UpdateHealthServicePlan = async (req, res) => {
     try {
         const { adminId, serviceId, newPlan, serviceType } = req.body;
         const Model = getHealthModel(serviceType);
+
+        let admin = await Admins.findById(adminId);
+        if (!admin) {
+            admin = await Admins.findOne({ _id: adminId });
+        }
+        if (!admin) return res.json({ success: false, message: "Admin not found." });
+
         const now = new Date();
         let expiry = null;
         if (newPlan === "FREE") expiry = new Date(now.setDate(now.getDate() + 30));
@@ -401,5 +416,58 @@ export const UpdateHealthServicePlan = async (req, res) => {
         res.json({ success: true, message: "Plan updated", ResponseData: updatedData });
     } catch (error) {
         res.status(500).json({ success: false });
+    }
+};
+
+export const DeleteHealthRequest = async (req, res) => {
+    try {
+        const { reqId } = req.body;
+        if (!reqId) {
+            return res.status(400).json({
+                success: false,
+                message: "Request ID is required."
+            });
+        }
+
+        const request = await NewServiceRequest.findById(reqId);
+        if (request && request.IDCard) {
+            await deleteImage(request.IDCard);
+        }
+        await NewServiceRequest.deleteOne({ _id: new ObjectId(reqId) });
+
+        // Return updated list
+        const updatedData = await NewServiceRequest.aggregate([
+            { $match: { catagory: "Health" } },
+            { $sort: { createdAt: -1 } },
+            {
+                $lookup: {
+                    from: "Accounts",
+                    localField: "email",
+                    foreignField: "AdminEmail",
+                    as: "adminInfo"
+                }
+            },
+            {
+                $addFields: {
+                    PaymentPlan: { $arrayElemAt: ["$adminInfo.PaymentPlan", 0] },
+                    address: { $ifNull: ["$location", "$address", ""] }
+                }
+            },
+            { $project: { adminInfo: 0 } }
+        ]).toArray();
+
+        return res.status(200).json({
+            success: true,
+            message: "Request deleted successfully ✅",
+            ResponseData: updatedData
+        });
+
+    } catch (error) {
+        console.error("DeleteHealthRequest Error:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Internal server error",
+            ResponseData: []
+        });
     }
 };

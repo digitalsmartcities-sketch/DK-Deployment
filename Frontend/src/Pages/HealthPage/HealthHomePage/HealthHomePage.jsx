@@ -16,7 +16,7 @@ export const HealthHomePage = () => {
         <div className="health-home-premium">
             {showForm ? (
                 <div className="health-form-container">
-                    <ServiceProviderRegForm setShowform={setShowform} />
+                    <ServiceProviderRegForm setShowform={setShowform} forcedCategory="Health" />
                 </div>
             ) : (
                 <>

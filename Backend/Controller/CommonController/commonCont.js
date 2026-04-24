@@ -116,6 +116,7 @@ export const ServiceProviderRegistrationController = async (req, res) => {
                 language,
                 AdminPassword: password,
                 category,
+                type,
                 otpHash,
                 expiresAt: new Date(Date.now() + 10 * 60 * 1000)
             });
@@ -280,10 +281,10 @@ export const VerifyServiceProviderOtp = async (req, res) => {
         if (io) {
             io.to("superadmin").emit("new_notification", {
                 type: "NEW_SERVICE_REQUEST",
-                message: `New ${pendingReq.category} service request from ${pendingReq.fullname} (Email verified)`,
-                createdAt: new Date(),
-                data: { email: pendingReq.email, fullname: pendingReq.fullname, category: pendingReq.category }
-            });
+                    message: `New ${pendingReq.category} service request from ${pendingReq.fullname} (Email verified)`,
+                    createdAt: new Date(),
+                    data: { email: pendingReq.email, fullname: pendingReq.fullname, category: pendingReq.category, type: pendingReq.type }
+                });
         }
 
         return res.json({

@@ -2,12 +2,12 @@ import { baseTemplate } from './baseTemplate.js';
 
 export const serviceProviderApprovalTemplate = (adminName, serviceName, sector, credentialsInstruction) => {
     const content = `
-        <h2 style="margin-top: 0; color: #0d6efd;">Registration Approved!</h2>
+        <h2 style="margin-top: 0; color: #1f8e5c;">Registration Approved!</h2>
         <p>Hello <strong>${adminName}</strong>,</p>
         <p>We are thrilled to inform you that your request to join <span class="highlight">Digital Kohat</span> as a Service Provider has been <strong>successfully approved!</strong></p>
         
         <div style="background-color: #f8fafc; border: 1px solid #edf2f7; border-radius: 12px; padding: 25px; margin: 30px 0;">
-            <span style="font-weight: 700; color: #0d6efd; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; display: block; margin-bottom: 15px;">Approved Service Details</span>
+            <span style="font-weight: 700; color: #1f8e5c; text-transform: uppercase; font-size: 11px; letter-spacing: 1px; display: block; margin-bottom: 15px;">Approved Service Details</span>
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                     <td style="padding-bottom: 8px; color: #697386; font-size: 14px;">Service Name:</td>
@@ -24,7 +24,7 @@ export const serviceProviderApprovalTemplate = (adminName, serviceName, sector, 
             </table>
         </div>
 
-        <div style="background-color: #ffffff; border-left: 4px solid #0d6efd; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0; background-color: #f9f9ff; border: 1px solid #eee; border-left-width: 4px;">
+        <div style="background-color: #ffffff; border-left: 4px solid #1f8e5c; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0; background-color: #f9f9ff; border: 1px solid #eee; border-left-width: 4px;">
             <h3 style="margin: 0 0 15px 0; font-size: 16px; font-weight: 700; color: #1a1f36;">Getting Started: Next Steps</h3>
             <ul style="margin: 0; padding-left: 20px; color: #4f566b; font-size: 14px; line-height: 1.8;">
                 <li>Navigate to the <strong>Admin Portal</strong> on our website.</li>

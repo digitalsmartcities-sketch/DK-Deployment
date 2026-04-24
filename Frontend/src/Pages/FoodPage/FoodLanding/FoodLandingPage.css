@@ -6,7 +6,8 @@
 }
 
 .FoodHero {
-    height: 60vh;
+    height: 50vh;
+    min-height: 450px;
     background-size: cover;
     background-position: center;
     background-attachment: fixed;
@@ -16,12 +17,7 @@
     text-align: center;
     color: white;
     position: relative;
-}
-
-.HeroContent {
-    z-index: 2;
-    max-width: 800px;
-    padding: 20px;
+    padding-top: 60px;
 }
 
 .category-tag {
@@ -35,12 +31,6 @@
     display: inline-block;
 }
 
-.HeroContent h1 {
-    font-size: 4rem;
-    margin-bottom: 10px;
-    font-weight: 800;
-}
-
 .tagline {
     font-size: 1.5rem;
     font-style: italic;
@@ -48,25 +38,42 @@
     opacity: 0.9;
 }
 
-.back-btn {
-    background: transparent;
-    border: 2px solid white;
+.fd-back-btn {
+    position: absolute;
+    top: 30px;
+    left: 40px;
+    z-index: 100;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1.5px solid rgba(255, 255, 255, 0.3);
     color: white;
-    padding: 10px 25px;
-    border-radius: 30px;
+    padding: 10px 22px;
+    border-radius: 50px;
     cursor: pointer;
-    font-weight: 600;
-    transition: all 0.3s ease;
+    font-weight: 700;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-.back-btn:hover {
+.fd-back-btn:hover {
     background: white;
     color: #267252;
+    transform: translateX(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.fd-back-btn::before {
+    content: '←';
+    font-size: 1.2rem;
 }
 
 .FoodContainer {
     max-width: 1300px;
-    margin: -50px auto 0;
+    margin: -100px auto 0;
     padding: 0 20px;
     position: relative;
     z-index: 3;
@@ -78,7 +85,8 @@
 .MenuSide,
 .GallerySection,
 .StaffSection,
-.MenuSection, .ReviewsSection {
+.MenuSection,
+.ReviewsSection {
     background: white;
     padding: 40px;
     border-radius: 15px;
@@ -768,26 +776,12 @@
     }
 }
 
-@media (max-width: 900px) {
-    .HeroContent h1 {
-        font-size: 2.5rem;
-    }
-
-    .HeroContent {
-        padding-top: 60px;
-    }
-}
-
 @media (max-width: 768px) {
 
     /* Adjust Hero */
     .FoodHero {
         height: 50vh;
         min-height: 400px;
-    }
-
-    .HeroContent h1 {
-        font-size: 2rem;
     }
 
     .tagline {
@@ -849,7 +843,8 @@
     .MenuSide,
     .GallerySection,
     .StaffSection,
-    .MenuSection, .ReviewsSection {
+    .MenuSection,
+    .ReviewsSection {
         padding: 25px;
     }
 
@@ -859,10 +854,6 @@
 }
 
 @media (max-width: 480px) {
-    .HeroContent h1 {
-        font-size: 1.8rem;
-    }
-
     .MenuItemsGrid {
         grid-template-columns: 1fr;
     }
@@ -1021,18 +1012,20 @@
 
 /* Report Button */
 .report-service-btn {
-    margin-top: 15px;
-    background: #f8fbfa;
+    margin-top: 25px;
+    width: 100%;
+    background: #fff;
     border: 1px solid #e74c3c;
     color: #e74c3c;
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 600;
+    padding: 12px 20px;
+    border-radius: 12px;
+    font-weight: 700;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
-    transition: 0.3s;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
 }
 
 .report-service-btn:hover {
@@ -1167,6 +1160,7 @@
 .form-group-side select:focus {
     border-color: #267252;
 }
+
 /* --- PREMIUM REVIEWS SECTION --- */
 .ReviewsSection.feedback-modern {
     background: #ffffff;
@@ -1419,6 +1413,25 @@
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
     gap: 12px;
     margin-top: 12px;
+}
+
+.fd-gallery-item {
+    position: relative;
+}
+
+.fd-gallery-item img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 10px;
+    border: 1px solid #eee;
+}
+
+.AddToCartBtn:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
 }
 
 .fd-gallery-item {

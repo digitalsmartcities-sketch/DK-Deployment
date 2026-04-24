@@ -10,16 +10,15 @@ CATEGORY → TYPE MAPPING
 ===================================================== */
 
 const categoryTypes = {
-  Education: ["School", "College", "University", "Academy", "Institute"],
-  Health: ["Specialist", "Pharmacy", "Emergency"],
-  IT: ["Software House", "Training Institute", "Tech Company"],
+  Education: ["School", "College"],
+  Health: ["Specialist"]
 };
 
 /* =====================================================
 STEP ONE
 ===================================================== */
 
-const StepOne = ({ onNext, formData, handleChange }) => (
+const StepOne = ({ onNext, formData, handleChange, forcedCategory }) => (
   <div className="sp-form-content fade-in">
 
     <div className="sp-input-group">
@@ -79,11 +78,15 @@ const StepOne = ({ onNext, formData, handleChange }) => (
         required
       >
         <option value="">Select Category</option>
-        {Object.keys(categoryTypes).map((cat) => (
-          <option key={cat} value={cat}>
-            {cat}
-          </option>
-        ))}
+        {forcedCategory ? (
+          <option value={forcedCategory}>{forcedCategory}</option>
+        ) : (
+          Object.keys(categoryTypes).map((cat) => (
+            <option key={cat} value={cat}>
+              {cat}
+            </option>
+          ))
+        )}
       </select>
     </div>
 
@@ -255,7 +258,7 @@ const StepOTP = ({ email, onVerify, onBack, isSubmitting }) => {
   );
 };
 
-export const ServiceProviderRegForm = ({ setShowform }) => {
+export const ServiceProviderRegForm = ({ setShowform, forcedCategory }) => {
   const [step, setStep] = useState(1);
   const { userData } = useContext(AppContext);
 
@@ -268,7 +271,7 @@ export const ServiceProviderRegForm = ({ setShowform }) => {
     address: "",
     language: "",
     IDCard: "",
-    category: "",
+    category: forcedCategory || "",
     type: "",
   });
 
@@ -388,6 +391,7 @@ export const ServiceProviderRegForm = ({ setShowform }) => {
               onNext={() => setStep(2)}
               formData={formData}
               handleChange={handleChange}
+              forcedCategory={forcedCategory}
             />
           ) : (
             <StepTwo
