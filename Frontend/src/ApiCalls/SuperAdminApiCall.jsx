@@ -177,11 +177,41 @@ export const handleGetRecords = (adminId, InstId, setData, setActiveTab) => {
         });
 };
 
+// Helper to get sector-specific URL prefix
+const getSectorUrl = (ServiceType, action) => {
+    const type = (ServiceType || "").toUpperCase();
+    
+    // Payment Plan Endpoints
+    if (action === "payment") {
+        if (["RESTAURANT", "FOOD"].includes(type)) return "/ChangeFoodAdminPaymentData";
+        if (["SCHOOL", "COLLEGE", "EDUCATION"].includes(type)) return "/ChangePaymentData";
+        return "/updateTheHealthServicePlan"; // Health uses PUT but we'll handle that below
+    }
+
+    // Instance State Endpoints
+    if (action === "state") {
+        if (["RESTAURANT", "FOOD"].includes(type)) return "/ChangeTheFoodInstState";
+        if (["SCHOOL", "COLLEGE", "EDUCATION"].includes(type)) return "/ChangeTheInstState";
+        return "/ChangeHealthServiceState";
+    }
+
+    // Delete Endpoints
+    if (action === "delete") {
+        if (["RESTAURANT", "FOOD"].includes(type)) return "/DeleteTheFoodInst";
+        if (["SCHOOL", "COLLEGE", "EDUCATION"].includes(type)) return "/DeleteTheInst";
+        return "/DeleteTheHealthService";
+    }
+
+    return "";
+};
+
 export const ChangePaymentPlan = (adminId, InstId, setData, newPlan, ServiceType) => {
-    axios.post(`${mainURL}/ChangeFoodAdminPaymentData`, { adminId, InstId, newPlan, ServiceType }, { withCredentials: true })
+    const url = getSectorUrl(ServiceType, "payment");
+    const method = url.includes("Health") ? "put" : "post";
+
+    axios[method](`${mainURL}${url}`, { adminId, InstId, newPlan, ServiceType }, { withCredentials: true })
         .then((res) => {
             if (res.data.success) {
-                console.log("Line 180 in SuperAdminApiCall.jsx in ChangePaymentPlan Response Data = ", res.data.ResponseData)
                 toast.success(res.data.message);
                 setData(res.data.ResponseData);
             } else {
@@ -194,7 +224,8 @@ export const ChangePaymentPlan = (adminId, InstId, setData, newPlan, ServiceType
 };
 
 export const ChangeInstState = (adminId, InstId, ServiceType, setData) => {
-    axios.post(`${mainURL}/ChangeTheInstState`, { adminId, InstId, ServiceType }, { withCredentials: true })
+    const url = getSectorUrl(ServiceType, "state");
+    axios.post(`${mainURL}${url}`, { adminId, InstId, ServiceType }, { withCredentials: true })
         .then((res) => {
             if (res.data.success) {
                 toast.success(res.data.message);
@@ -208,8 +239,9 @@ export const ChangeInstState = (adminId, InstId, ServiceType, setData) => {
         });
 };
 
-export const DeleteTheInst = (adminId, InstId, setData) => {
-    axios.post(`${mainURL}/DeleteTheInst`, { adminId, InstId }, { withCredentials: true })
+export const DeleteTheInst = (adminId, InstId, ServiceType, setData) => {
+    const url = getSectorUrl(ServiceType, "delete");
+    axios.post(`${mainURL}${url}`, { adminId, InstId, ServiceType }, { withCredentials: true })
         .then((res) => {
             if (res.data.success) {
                 toast.success(res.data.message);
@@ -219,7 +251,7 @@ export const DeleteTheInst = (adminId, InstId, setData) => {
             }
         }).catch((err) => {
             console.error("DeleteTheInst Error:", err);
-            toast.error("Failed to delete institute");
+            toast.error("Failed to delete institution");
         });
 };
 

@@ -221,7 +221,7 @@ const SchoolDataTable = ({ data, setData, setActiveTab }) => {
                                 <button
                                     className="SA_action_icon danger"
                                     onClick={() =>
-                                        ApiCall.DeleteTheInst(admin.adminId, admin.InstId, setData)
+                                        ApiCall.DeleteTheInst(admin.adminId, admin.InstId, admin.ServiceType, setData)
                                     }
                                 >
                                     <FiTrash2 />
@@ -650,7 +650,7 @@ const CollegeDataTable = ({ data, setData, setActiveTab }) => {
                                 <button
                                     className="SA_action_icon danger"
                                     onClick={() =>
-                                        ApiCall.DeleteTheInst(admin.adminId, admin.InstId, setData)
+                                        ApiCall.DeleteTheInst(admin.adminId, admin.InstId, admin.ServiceType, setData)
                                     }
                                 >
                                     <FiTrash2 />

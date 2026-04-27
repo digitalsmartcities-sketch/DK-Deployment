@@ -403,6 +403,11 @@
     cursor: pointer;
 }
 
+.hlth-ds-modal-actions .btn-primary:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+}
+
 .hlth-ds-modal-actions .btn-secondary {
     background-color: #eee;
     color: var(--text-main);
@@ -570,6 +575,12 @@
     color: #475569;
     display: flex;
     gap: 8px;
+}
+
+.app-message.rejection {
+    background: #fff5f5;
+    border-left: 3px solid #ef4444;
+    color: #991b1b;
 }
 
 .hlth-ds-appointment-card .card-footer {

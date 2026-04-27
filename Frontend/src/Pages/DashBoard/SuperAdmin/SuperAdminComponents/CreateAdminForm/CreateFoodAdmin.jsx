@@ -14,7 +14,7 @@ export const CreateFoodAdminModal = ({ id, setActiveTab, Data, setRowData }) => 
         PaymentPlan: Data.PaymentPlan || "",
         reqId: id
     });
-    
+
     let [formSubmitted, setFormSubmitted] = useState(false);
 
     const handleChange = (e) => {

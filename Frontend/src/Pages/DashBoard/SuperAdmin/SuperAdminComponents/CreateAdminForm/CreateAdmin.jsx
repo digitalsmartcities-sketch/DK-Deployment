@@ -15,6 +15,8 @@ export const CreateAdminModal = ({ id, setActiveTab, Data }) => {
         reqId: id
     });
 
+    console
+
     let [formSubmitted, setFormSubmitted] = useState(false);
 
     const handleChange = (e) => {

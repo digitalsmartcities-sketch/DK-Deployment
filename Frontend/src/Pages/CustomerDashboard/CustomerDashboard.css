@@ -146,3 +146,18 @@
     font-weight: bold;
     font-size: 0.9rem;
 }
+
+.pdf-download-btn-icon {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.pdf-download-btn-icon:hover {
+    transform: scale(1.2);
+}

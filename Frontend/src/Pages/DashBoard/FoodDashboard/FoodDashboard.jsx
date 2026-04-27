@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { GetTheDashboardDta, UpdateFoodMenuApi, UpdateFoodProfileApi, UpdateReviewReplyApi, LogoutApi, SubmitSupportTicketApi, UpdateReportStatusApi, UpdateFoodPromosApi, UpdateFoodGalleryApi, SwitchDashBoard, UpdateCoverImageApi, AddManagerApi, UpdateTimingsApi } from "../../../ApiCalls/DashBoardApiCalls";
+import { jsPDF } from "jspdf";
+import { generateOrderPDF } from "../../../utils/pdfGenerator";
+import { GetTheDashboardDta, UpdateFoodMenuApi, UpdateFoodProfileApi, UpdateReviewReplyApi, LogoutApi, SubmitSupportTicketApi, UpdateReportStatusApi, UpdateFoodPromosApi, UpdateFoodGalleryApi, SwitchDashBoard, UpdateCoverImageApi, AddManagerApi, UpdateTimingsApi, UpdatePaymentSettingsApi } from "../../../ApiCalls/DashBoardApiCalls";
 import { GetOrdersApi, UpdateOrderStatusApi, GetTheFoodData } from "../../../ApiCalls/ApiCalls";
 import { toast } from "react-toastify";
 import "./FoodDashboard.css";
@@ -27,7 +29,7 @@ import {
     FiSend,
     FiCamera
 } from "react-icons/fi";
-import { FaUser, FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaClock, FaPrint, FaReply, FaStar } from "react-icons/fa";
+import { FaUser, FaPlus, FaTrash, FaEdit, FaCheck, FaTimes, FaClock, FaPrint, FaReply, FaStar, FaFilePdf } from "react-icons/fa";
 import { Food_Details } from "../../../Store/Food_store";
 import { RequestServiceTab } from "../ProviderDashboard/Components/RequestServiceTab";
 
@@ -559,11 +561,124 @@ const MembershipDetails = () => {
         </div>
     )
 }
+const PaymentSettings = ({ data, onUpdate }) => {
+    const [paymentInfo, setPaymentInfo] = useState(data.paymentInfo || {
+        easypaisa: { title: "", number: "" },
+        jazzcash: { title: "", number: "" },
+        bank: { bankName: "", title: "", account: "" }
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onUpdate(paymentInfo);
+    };
+
+    return (
+        <div className="fd-card">
+            <h2 className="fd-section-title">Payment Methods</h2>
+            <p className="fd-section-subtitle">Configure the payment details shown to customers for online orders.</p>
+
+            <form className="fd-profile-form" onSubmit={handleSubmit}>
+                <div className="fd-managers-grid">
+                    <div className="fd-payment-column">
+                        <h3 className="fd-subsection-title">EasyPaisa</h3>
+                        <div className="fd-form-group">
+                            <label>Account Title</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.easypaisa?.title}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, easypaisa: { ...paymentInfo.easypaisa, title: e.target.value } })}
+                                placeholder="e.g. John Doe"
+                            />
+                        </div>
+                        <div className="fd-form-group">
+                            <label>EasyPaisa Number</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.easypaisa?.number}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, easypaisa: { ...paymentInfo.easypaisa, number: e.target.value } })}
+                                placeholder="03XXXXXXXXX"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="fd-payment-column">
+                        <h3 className="fd-subsection-title">JazzCash</h3>
+                        <div className="fd-form-group">
+                            <label>Account Title</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.jazzcash?.title}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, jazzcash: { ...paymentInfo.jazzcash, title: e.target.value } })}
+                                placeholder="e.g. John Doe"
+                            />
+                        </div>
+                        <div className="fd-form-group">
+                            <label>JazzCash Number</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.jazzcash?.number}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, jazzcash: { ...paymentInfo.jazzcash, number: e.target.value } })}
+                                placeholder="03XXXXXXXXX"
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div className="fd-form-group" style={{ marginTop: "20px" }}>
+                    <h3 className="fd-subsection-title">Bank Transfer (Optional)</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "15px" }}>
+                        <div>
+                            <label>Bank Name</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.bank?.bankName}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, bank: { ...paymentInfo.bank, bankName: e.target.value } })}
+                            />
+                        </div>
+                        <div>
+                            <label>Account Title</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.bank?.title}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, bank: { ...paymentInfo.bank, title: e.target.value } })}
+                            />
+                        </div>
+                        <div>
+                            <label>Account / IBAN</label>
+                            <input
+                                type="text"
+                                className="fd-input"
+                                value={paymentInfo.bank?.account}
+                                onChange={e => setPaymentInfo({ ...paymentInfo, bank: { ...paymentInfo.bank, account: e.target.value } })}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <div style={{ marginTop: "30px" }}>
+                    <button type="submit" className="fd-btn-primary">Save Payment Settings</button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
 // ==========================================
 // 1. ORDERS CENTER (ADVANCED)
 // ==========================================
 const FoodOrders = ({ orders, setOrders, profileData }) => {
     const [subTab, setSubTab] = useState("New");
+
+    const handleDownloadPDF = (order) => {
+        generateOrderPDF(order, profileData);
+    };
 
     const handlePrint = (order) => {
         const win = window.open("", "_blank", "width=600,height=800");
@@ -689,6 +804,18 @@ const FoodOrders = ({ orders, setOrders, profileData }) => {
                                     <p><strong>Customer:</strong> {order.userDetails?.name || order.customer}</p>
                                     <p><strong>Items:</strong> {Array.isArray(order.items) ? order.items.map(i => `${i.qty}x ${i.name}`).join(", ") : order.items}</p>
                                     <p className="fd-total-price">Total: Rs. {order.total}</p>
+                                    <p><strong>Payment:</strong> {order.paymentMethod === 'online' ? 'Online Payment' : 'Cash on Delivery'}</p>
+                                    {order.paymentScreenshot && (
+                                        <div className="fd-payment-screenshot-preview">
+                                            <p><strong>Payment Proof:</strong></p>
+                                            <a href={order.paymentScreenshot} target="_blank" rel="noreferrer">
+                                                <img src={order.paymentScreenshot} alt="Payment Proof" style={{ width: '100px', borderRadius: '8px', border: '1px solid #ddd', marginTop: '5px' }} />
+                                            </a>
+                                            <p className={`fd-payment-verify-status ${order.paymentVerified ? 'verified' : 'unverified'}`}>
+                                                {order.paymentVerified ? '✓ Verified' : '⚠ Unverified'}
+                                            </p>
+                                        </div>
+                                    )}
                                     {order.specialInstructions && <p className="fd-note">Note: {order.specialInstructions}</p>}
                                 </>
                             )}
@@ -709,6 +836,24 @@ const FoodOrders = ({ orders, setOrders, profileData }) => {
                             )}
 
                             <button className="fd-btn-icon" title="Print Receipt" onClick={() => handlePrint(order)}><FaPrint /></button>
+                            <button className="fd-btn-icon" title="Download PDF" onClick={() => handleDownloadPDF(order)}><FaFilePdf /></button>
+                            
+                            {order.paymentScreenshot && !order.paymentVerified && (
+                                <button 
+                                    className="fd-btn-success" 
+                                    style={{ marginLeft: 'auto' }}
+                                    onClick={() => {
+                                        UpdateOrderStatusApi(order._id || order.id, order.status, true).then(res => {
+                                            if (res.data.success) {
+                                                setOrders(orders.map(o => (o._id === order._id || o.id === order.id) ? { ...o, paymentVerified: true } : o));
+                                                toast.success("Payment verified ✅");
+                                            }
+                                        });
+                                    }}
+                                >
+                                    Verify Payment
+                                </button>
+                            )}
                         </div>
                     </div>
                 )) : <div className="fd-empty-state">No orders in this category.</div>}
@@ -1054,6 +1199,7 @@ const FoodReports = ({ reports = [], reportCount = 0, status = "Active", onSelec
                         <th>Date</th>
                         <th>Reason</th>
                         <th>Reporter</th>
+                        <th>Email</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -1063,6 +1209,7 @@ const FoodReports = ({ reports = [], reportCount = 0, status = "Active", onSelec
                             <td>{r.timestamp ? new Date(r.timestamp).toLocaleDateString() : (r.date || "N/A")}</td>
                             <td><strong>{r.reason}</strong><br /><small style={{ color: '#888' }}>{r.details}</small></td>
                             <td>{r.reporterName || "Anonymous"}</td>
+                            <td>{r.reporterEmail || "N/A"}</td>
                             <td><span className={`fd-status-badge status-${(r.status || "Pending").toLowerCase()}`}>{r.status || "Pending"}</span></td>
                         </tr>
                     )) : <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>No reports found. Good job!</td></tr>}
@@ -1389,6 +1536,10 @@ export const FoodDashboard = () => {
         UpdateReviewReplyApi(id, response);
     };
 
+    const handlePaymentUpdate = (paymentInfo) => {
+        UpdatePaymentSettingsApi(paymentInfo, setProfileData);
+    };
+
     const handleReportClick = (report) => {
         setActiveReport(report);
         setReportResponse(report?.adminResponse || "");
@@ -1442,6 +1593,7 @@ export const FoodDashboard = () => {
             case "MyPurchases": return <CustomerOrderTracking orders={orders} currentUserName="Ali Khan" />;
             case "Ads": return <FoodAd />;
             case "Membership-details": return <MembershipDetails />;
+            case "PaymentMethods": return <PaymentSettings data={profileData} onUpdate={handlePaymentUpdate} />;
             case "Gallery": return (
                 <div className="fd-card">
                     <h2 className="fd-section-title">Photo Gallery</h2>
@@ -1624,6 +1776,7 @@ export const FoodDashboard = () => {
 
                         <li onClick={() => setActiveTab("MyPurchases")} className={activeTab === "MyPurchases" ? "active" : ""}><FiShoppingBag className="fd-DshbrdSidbrIcn" /> <p className="fd-DshbrdtagName">My Purchases</p></li>
                         <li onClick={() => setActiveTab("Gallery")} className={activeTab === "Gallery" ? "active" : ""}><FiUser className="fd-DshbrdSidbrIcn" /> <p className="fd-DshbrdtagName">Gallery</p></li>
+                        <li onClick={() => setActiveTab("PaymentMethods")} className={activeTab === "PaymentMethods" ? "active" : ""}><FiDollarSign className="fd-DshbrdSidbrIcn" /> <p className="fd-DshbrdtagName">Payment Methods</p></li>
                         <li onClick={() => setActiveTab("Timings")} className={activeTab === "Timings" ? "active" : ""}><FiClock className="fd-DshbrdSidbrIcn" /> <p className="fd-DshbrdtagName">Timings</p></li>
                         {profileData?.role === "admin" && otherServices?.length > 0 && (
                             <li onClick={() => setActiveTab("Managers")} className={activeTab === "Managers" ? "active" : ""}><FiUsers className="fd-DshbrdSidbrIcn" /> <p className="fd-DshbrdtagName">Add Managers</p></li>
@@ -1753,6 +1906,10 @@ export const FoodDashboard = () => {
                         <div className="fd-form-group">
                             <label>Reporter</label>
                             <input type="text" className="fd-input" value={activeReport.reporterName || activeReport.reporter || "Anonymous"} disabled />
+                        </div>
+                        <div className="fd-form-group">
+                            <label>Reporter Email</label>
+                            <input type="text" className="fd-input" value={activeReport.reporterEmail || "N/A"} disabled />
                         </div>
                         <div className="fd-form-group">
                             <label>Your Response</label>

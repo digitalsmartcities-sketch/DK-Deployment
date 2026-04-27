@@ -298,6 +298,53 @@ export const VerifyServiceProviderOtp = async (req, res) => {
     }
 };
 
+export const ResendServiceProviderOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.json({ success: false, message: "Email is required." });
+        }
+
+        const pendingReq = await PendingServiceRequest.findOne({ email: email.toLowerCase().trim() });
+
+        if (!pendingReq) {
+            return res.json({ success: false, message: "No pending registration found for this email." });
+        }
+
+        // Generate new OTP
+        const otpSize = 6;
+        const otp = Math.floor(Math.pow(10, otpSize - 1) + Math.random() * (Math.pow(10, otpSize) - Math.pow(10, otpSize - 1) - 1)).toString();
+        const otpHash = await argon2.hash(otp);
+
+        // Update record
+        await PendingServiceRequest.updateOne(
+            { _id: pendingReq._id },
+            { 
+                $set: { 
+                    otpHash,
+                    expiresAt: new Date(Date.now() + 10 * 60 * 1000) // Reset expiry to 10 mins
+                } 
+            }
+        );
+
+        // Send OTP
+        const emailSent = await sendOtpEmail(email, otp);
+        if (!emailSent) {
+            return res.json({ success: false, message: "Failed to send verification email." });
+        }
+
+        return res.json({
+            success: true,
+            message: "A new verification code has been sent to your email. 📩"
+        });
+
+    } catch (error) {
+        console.error("ResendServiceProviderOtp Error:", error);
+        return res.json({ success: false, message: "Something went wrong." });
+    }
+};
+
 
 export const ChangeRatingData = async (req, res) => {
     try {

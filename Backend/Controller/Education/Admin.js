@@ -1161,7 +1161,6 @@ export const AddResAndPrfumncDataToDb = async (req, res) => {
         const { model: Model } = await resolveServiceResource(req);
         const { ServiceId } = req.token;
 
-        console.log(req.body.ResAndPrfrmnc);
 
         await Model.findByIdAndUpdate(
             ServiceId,
@@ -1563,4 +1562,50 @@ export const Logout = (req, res) => {
         path: "/",
     });
 res.json({ success: true, message: "Logged out successfully." });
+};
+
+// =========================================
+// REPLY TO REVIEW
+// =========================================
+export const ReplyToReview = async (req, res) => {
+    try {
+        const { ServiceId } = req.token;
+        const { reviewId, response } = req.body;
+
+        const { model: Model } = await resolveServiceResource(req);
+        
+        // 1. Try to update in detailedReviews array
+        const result = await Model.updateOne(
+            { 
+                _id: new ObjectId(ServiceId),
+                "detailedReviews.id": new ObjectId(reviewId)
+            },
+            { 
+                $set: { 
+                    "detailedReviews.$.response": response,
+                    "detailedReviews.$.respondedAt": new Date()
+                } 
+            }
+        );
+
+        if (result.matchedCount === 0) {
+            await Model.updateOne(
+                { 
+                    _id: new ObjectId(ServiceId),
+                    "detailedReviews._id": new ObjectId(reviewId)
+                },
+                { 
+                    $set: { 
+                        "detailedReviews.$.response": response,
+                        "detailedReviews.$.respondedAt": new Date()
+                    } 
+                }
+            );
+        }
+
+        res.json({ success: true, message: "Reply saved successfully." });
+    } catch (error) {
+        console.error("ReplyToReview error:", error);
+        res.json({ success: false, message: error.message });
+    }
 };

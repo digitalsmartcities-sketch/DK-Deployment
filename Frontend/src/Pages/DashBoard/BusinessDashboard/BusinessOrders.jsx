@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { FaFilePdf } from 'react-icons/fa';
+import { generateOrderPDF } from '../../../utils/pdfGenerator';
 
 export const BusinessOrders = () => {
     const [orders, setOrders] = useState([]);
@@ -75,6 +77,13 @@ export const BusinessOrders = () => {
                             <span className="fd-status-pill" style={{ backgroundColor: getStatusColor(o.status), color: 'white', padding: '5px 12px', borderRadius: '15px', fontSize: '0.85rem' }}>
                                 {o.status}
                             </span>
+                            <button 
+                                onClick={() => generateOrderPDF(o, { businessName: o.businessId?.businessName })} 
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e74c3c', fontSize: '1.2rem', display: 'flex', alignItems: 'center' }}
+                                title="Download Receipt PDF"
+                            >
+                                <FaFilePdf />
+                            </button>
                         </div>
                         <div className="fd-order-body">
                             <p><strong>Customer:</strong> {o.customerName}</p>

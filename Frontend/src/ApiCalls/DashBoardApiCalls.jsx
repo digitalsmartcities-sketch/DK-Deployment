@@ -523,6 +523,25 @@ export const UpdateReportStatusApi = (reportId, status, response) => {
     return axios.post(`${maniURL}/food/report/status`, { reportId, status, response }, { withCredentials: true });
 }
 
+export const UpdatePaymentSettingsApi = (paymentInfo, setProfileData) => {
+    return axios.post(`${maniURL}/food/UpdatePaymentSettings`, { paymentInfo }, { withCredentials: true })
+        .then((res) => {
+            if (res.data.success) {
+                toast.success(res.data.message);
+                if (setProfileData) {
+                    setProfileData(prev => ({ ...prev, paymentInfo: paymentInfo }));
+                }
+            } else {
+                toast.error(res.data.message);
+            }
+            return res.data;
+        })
+        .catch((err) => {
+            toast.error("Failed to update payment settings.");
+            throw err;
+        });
+}
+
 export const UpdateCoverImageApi = (formData, setProfileData) => {
     return axios.put(`${maniURL}/update-cover-image`, formData, {
         headers: { "Content-Type": "multipart/form-data" },

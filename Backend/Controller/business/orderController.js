@@ -1,5 +1,8 @@
 import Order from "../../Models/business/Order.js";
 import Review from "../../Models/business/Review.js";
+import Customer from "../../Models/business/Customer.js";
+import { sendEmail } from "../../utils/emailSender.js";
+import { orderStatusTemplate } from "../../templates/orderStatusTemplate.js";
 
 // @route   POST /business/orders/customer-update
 // @desc    Customer update order (cancel or edit notes)
@@ -81,6 +84,36 @@ export const updateOrderStatus = async (req, res) => {
         order.status = status;
         order.statusHistory.push({ status, changedBy: "admin" });
         await order.save();
+
+        // Send Email Notification to Customer
+        let targetEmail = order.customerEmail;
+        
+        // If email is missing in order, try to fetch it from Customer model
+        if (!targetEmail && order.customerId) {
+            try {
+                const customer = await Customer.findById(order.customerId);
+                if (customer) targetEmail = customer.email;
+            } catch (err) {
+                console.error("Failed to fetch customer email:", err.message);
+            }
+        }
+
+        if (targetEmail) {
+            try {
+                console.log(`Sending status update email to: ${targetEmail}`);
+                const emailHtml = orderStatusTemplate(order.customerName, order._id, status);
+                await sendEmail({
+                    to: targetEmail,
+                    subject: `Order Update: #${order._id} is now ${status}`,
+                    html: emailHtml
+                });
+            } catch (emailErr) {
+                console.error("Failed to send order status email:", emailErr.message);
+            }
+        } else {
+            console.warn(`No email found for order ${order._id}, skipping notification.`);
+        }
+
         res.json({ success: true, message: "Order status updated successfully", data: order });
     } catch (err) {
         res.status(500).json({ success: false, message: "Server error", error: err.message });
@@ -95,6 +128,14 @@ export const placeBusinessOrder = async (req, res) => {
         const orderData = req.body;
         if (req.customer) {
             orderData.customerId = req.customer.id;
+            
+            // Automatically fill customer details from DB if not provided
+            const customer = await Customer.findById(req.customer.id);
+            if (customer) {
+                if (!orderData.customerName) orderData.customerName = customer.name;
+                if (!orderData.customerEmail) orderData.customerEmail = customer.email;
+                if (!orderData.customerPhone) orderData.customerPhone = customer.phone;
+            }
         }
 
         orderData.statusHistory = [{ status: "Received", changedBy: "customer" }];

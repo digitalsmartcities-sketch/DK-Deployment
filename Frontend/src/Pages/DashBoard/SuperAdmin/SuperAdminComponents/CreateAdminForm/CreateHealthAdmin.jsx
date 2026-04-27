@@ -16,7 +16,7 @@ export const CreateHealthAdminModal = ({ id, setActiveTab, Data }) => {
         reqId: id
     });
 
-    let [formSubmitted , setFormSubmitted] = useState(false);
+    let [formSubmitted, setFormSubmitted] = useState(false);
 
     const handleChange = (e) => {
         let name = e.target.name;

@@ -67,5 +67,6 @@ EduAdminRoutes.post("/AddReviewTabData", AdminMW, EduAdminCont.UpdateReviewsToDb
 EduAdminRoutes.post("/UpdateGallery", AdminMW, upload.any(), EduAdminCont.UpdateGallery);
 EduAdminRoutes.post("/GetInstituteAdmissions", AdminMW, EduAdminCont.GetInstituteAdmissions);
 EduAdminRoutes.post("/update-payment-gateways", AdminMW, EduAdminCont.UpdatePaymentGatewaysToDb);
+EduAdminRoutes.post("/ReplyToReview", AdminMW, EduAdminCont.ReplyToReview);
 
 export default EduAdminRoutes;

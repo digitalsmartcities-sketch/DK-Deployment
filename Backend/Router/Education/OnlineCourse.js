@@ -18,6 +18,8 @@ OnlineCourseRoutes.get("/admin/courses/all", AdminMW, OCCont.getAllCoursesAdmin)
 // Enrollment Management
 OnlineCourseRoutes.get("/admin/enrollments/all", AdminMW, OCCont.getAllEnrollments);
 OnlineCourseRoutes.put("/admin/enrollments/status/:id", AdminMW, OCCont.updateEnrollmentStatus);
+OnlineCourseRoutes.delete("/admin/enrollments/:id", AdminMW, OCCont.deleteEnrollment);
+
 
 // Settings Management
 OnlineCourseRoutes.get("/admin/oc-settings", AdminMW, OCCont.getOCSettings);

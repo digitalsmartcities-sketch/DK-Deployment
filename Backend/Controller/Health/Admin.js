@@ -508,52 +508,82 @@ export const UpdateAppointmentStatus = async (req, res) => {
     try {
         const { ServiceId } = req.token;
         const { id } = req.params;
-        const { status, appointmentNumber, appointmentTime, meetingLink } = req.body;
+        const { status, appointmentNumber, appointmentTime, meetingLink, rejectionReason } = req.body;
 
-        const updateFields = { "Appointments.$.status": status };
-        if (appointmentNumber) updateFields["Appointments.$.appointmentNumber"] = appointmentNumber;
-        if (appointmentTime) updateFields["Appointments.$.time"] = appointmentTime;
-        if (meetingLink) updateFields["Appointments.$.meetingLink"] = meetingLink;
+        const specialist = await Specialists.findById(ServiceId);
+        if (!specialist) {
+            return res.json({ success: false, message: "Specialist not found" });
+        }
 
-        const updated = await Specialists.findOneAndUpdate(
-            { _id: ServiceId, "Appointments._id": id },
-            { $set: updateFields },
-            { new: true }
-        );
+        const appointment = specialist.Appointments.id(id);
+        if (!appointment) {
+            return res.json({ success: false, message: "Appointment not found" });
+        }
 
-        if (status === "Confirmed") {
-            const appointment = updated.Appointments.find(app => app._id.toString() === id);
-            if (appointment) {
+        // Update fields
+        appointment.status = status;
+        if (appointmentNumber) appointment.appointmentNumber = appointmentNumber;
+        if (appointmentTime) appointment.time = appointmentTime;
+        if (meetingLink) appointment.meetingLink = meetingLink;
+        if (rejectionReason) appointment.rejectionReason = rejectionReason;
+
+        await specialist.save();
+
+        // Notification logic
+        if (status === "Confirmed" || status === "Rejected") {
+            try {
                 const patientName = appointment.patientName;
                 const patientEmail = appointment.email;
-                const patientPhone = appointment.phone;
-                const doctorName = updated.basicInfo?.adminName || "Specialist";
+                const doctorName = specialist.basicInfo?.adminName || "Specialist";
                 const date = appointment.date;
-                const finalTime = appointmentTime || appointment.time;
-                const finalAppNum = appointmentNumber || "N/A";
-                const consType = appointment.consultationType || "IN-CLINIC";
-                const mLink = meetingLink || appointment.meetingLink;
+                const finalTime = appointment.time;
 
-                // Send Email
-                const emailHtml = appointmentTemplate(patientName, doctorName, date, finalTime, finalAppNum, consType, mLink);
-                await sendEmail({
-                    to: patientEmail,
-                    subject: "Appointment Confirmation - Digital Kohat Health",
-                    html: emailHtml
-                });
+                if (status === "Confirmed") {
+                    const finalAppNum = appointmentNumber || appointment.appointmentNumber || "N/A";
+                    const consType = appointment.consultationType || "IN-CLINIC";
+                    const mLink = meetingLink || appointment.meetingLink;
 
-                // Send WhatsApp Notification
-                let waMessage = `Hello ${patientName}, your appointment with Dr. ${doctorName} is confirmed for ${date} at ${finalTime}. Your appointment number is ${finalAppNum}. Type: ${consType}.`;
-                if (consType === "ONLINE" && mLink) {
-                    waMessage += ` Join Meeting: ${mLink}`;
+                    const emailHtml = appointmentTemplate(patientName, doctorName, date, finalTime, finalAppNum, consType, mLink);
+                    await sendEmail({
+                        to: patientEmail,
+                        subject: "Appointment Confirmation - Digital Kohat Health",
+                        html: emailHtml
+                    });
+
+                    let waMessage = `Hello ${patientName}, your appointment with Dr. ${doctorName} is confirmed for ${date} at ${finalTime}. Type: ${consType}. Thank you!`;
+                    await sendWhatsAppNotification(appointment.phone, waMessage);
+
+                } else if (status === "Rejected") {
+                    const reason = rejectionReason || "No specific reason provided.";
+                    const rejectionHtml = `
+                        <div style="font-family: sans-serif; line-height: 1.6; color: #333;">
+                            <h2 style="color: #e74c3c;">Appointment Update</h2>
+                            <p>Dear <strong>${patientName}</strong>,</p>
+                            <p>We regret to inform you that your appointment request with <strong>Dr. ${doctorName}</strong> for <strong>${date}</strong> at <strong>${finalTime}</strong> has been rejected.</p>
+                            <div style="background: #fdf2f2; border-left: 4px solid #e74c3c; padding: 15px; margin: 20px 0;">
+                                <strong>Reason for Rejection:</strong><br/>
+                                ${reason}
+                            </div>
+                            <p>If you have any questions, please contact the clinic directly.</p>
+                            <p>Best regards,<br/>The Digital Kohat Health Team</p>
+                        </div>
+                    `;
+
+                    await sendEmail({
+                        to: patientEmail,
+                        subject: "Appointment Update - Digital Kohat Health",
+                        html: rejectionHtml
+                    });
+
+                    const waRejectMessage = `Hello ${patientName}, your appointment request with Dr. ${doctorName} for ${date} has been rejected. Reason: ${reason}`;
+                    await sendWhatsAppNotification(appointment.phone, waRejectMessage);
                 }
-                waMessage += ` Thank you!`;
-
-                await sendWhatsAppNotification(patientPhone, waMessage);
+            } catch (notifyError) {
+                console.error("Notification Error (Non-blocking):", notifyError);
             }
         }
 
-        return res.json({ success: true, message: "Appointment status updated", appointments: updated.Appointments });
+        return res.json({ success: true, message: `Appointment ${status.toLowerCase()} successfully`, appointments: specialist.Appointments });
     } catch (error) {
         console.error("UpdateAppointmentStatus error:", error);
         return res.status(500).json({ success: false, message: "Server error" });
@@ -565,14 +595,22 @@ export const DeleteAppointmentInternal = async (req, res) => {
         const { ServiceId } = req.token;
         const { id } = req.params;
 
-        const updated = await Specialists.findByIdAndUpdate(
-            ServiceId,
-            { $pull: { Appointments: { _id: id } } },
-            { new: true }
-        );
+        const specialist = await Specialists.findById(ServiceId);
+        if (!specialist) {
+            return res.json({ success: false, message: "Specialist not found" });
+        }
 
-        return res.json({ success: true, message: "Appointment deleted", appointments: updated.Appointments });
+        const appointment = specialist.Appointments.id(id);
+        if (!appointment) {
+            return res.json({ success: false, message: "Appointment already deleted or not found" });
+        }
+
+        appointment.deleteOne(); // Mongoose helper for sub-documents
+        await specialist.save();
+
+        return res.json({ success: true, message: "Appointment deleted", appointments: specialist.Appointments });
     } catch (error) {
+        console.error("DeleteAppointmentInternal error:", error);
         return res.status(500).json({ success: false, message: "Server error" });
     }
 };

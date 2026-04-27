@@ -95,6 +95,20 @@ export const updateEnrollmentStatus = async (id, status, reason, setEnrollments)
     }
 };
 
+export const deleteEnrollment = async (id, setEnrollments) => {
+    if (!window.confirm("Are you sure you want to permanently delete this enrollment record? This will also remove the payment proof from Cloudinary.")) return;
+    try {
+        const res = await axiosInstance.delete(`/admin/enrollments/${id}`);
+        if (res.data.success) {
+            toast.success(res.data.message);
+            getAllEnrollments(setEnrollments);
+        }
+    } catch (err) {
+        toast.error("Failed to delete enrollment.");
+    }
+};
+
+
 export const getOCSettings = async (setSettings) => {
     try {
         const res = await axiosInstance.get("/admin/oc-settings");
