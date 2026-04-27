@@ -235,6 +235,7 @@ export const SuperAdminDashboard = () => {
                             style={{ marginTop: "auto" }}
                         >
                             <FiLogOut />
+                            <span className="SA_logout_text">Logout</span>
                         </li>
                     </nav>
                 </aside>

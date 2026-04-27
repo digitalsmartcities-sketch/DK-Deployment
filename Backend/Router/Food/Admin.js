@@ -11,10 +11,12 @@ const foodAdminRoutes = express.Router();
 foodAdminRoutes.post("/food/AddManager", AdminMW, AddManager);
 foodAdminRoutes.post("/UpdateFoodMenu", AdminMW, SACACFun.UpdateFoodMenuToDb);
 foodAdminRoutes.post("/SubmitSupportTicket", AdminMW, SACACFun.SubmitSupportTicket);
-foodAdminRoutes.post("/report/status", AdminMW, SACACFun.UpdateReportStatus);
+foodAdminRoutes.post("/food/report/status", AdminMW, SACACFun.UpdateReportStatus);
 foodAdminRoutes.post("/UpdateFoodPromos", AdminMW, SACACFun.UpdateFoodPromotions);
 foodAdminRoutes.post("/UpdateFoodGallery", AdminMW, upload.array("galleryImages", 10), SACACFun.UpdateFoodGallery);
 foodAdminRoutes.post("/UpdateTimings", AdminMW, SACACFun.UpdateTimingsToDb);
 foodAdminRoutes.put("/update-cover-image", AdminMW, upload.single("coverImage"), SACACFun.UpdateCoverImage);
+foodAdminRoutes.post("/ReplyToReview", AdminMW, SACACFun.ReplyToReview);
+foodAdminRoutes.post("/food/UpdatePaymentSettings", AdminMW, SACACFun.UpdatePaymentSettings);
 
 export default foodAdminRoutes;

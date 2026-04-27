@@ -246,6 +246,25 @@ export const VerifyServiceProviderOtpApi = (data, onSuccess, setLoading) => {
         });
 }
 
+export const ResendServiceProviderOtpApi = (email, setLoading) => {
+    if (setLoading) setLoading(true);
+    axios.post(`${mainURL}/service-provider/resend-otp`, { email })
+        .then((res) => {
+            if (res.data.success) {
+                toast.success(res.data.message || "New OTP sent! 📩");
+            } else {
+                toast.error(res.data.message || "Failed to resend OTP.");
+            }
+        })
+        .catch((err) => {
+            console.error("Resend OTP error:", err);
+            toast.error("Something went wrong while resending OTP.");
+        })
+        .finally(() => {
+            if (setLoading) setLoading(false);
+        });
+}
+
 export const NewAdmisnForSchoolReq = (data, cata, setIsSubmitting) => {
     const fd = new FormData();
     fd.append("studentName", data.studentName);

@@ -4,6 +4,10 @@ import navlogo from "../imgs/navlogo.jpg";
 import { useNavigate } from "react-router-dom";
 import { AppContext } from "../../Store/AppContext";
 import { Globe, ChevronDown } from "lucide-react";
+import { FiHome, FiUsers, FiLogOut } from "react-icons/fi";
+import { logoutSuperAdmin } from "../../ApiCalls/SuperAdminApiCall";
+
+
 
 const languages = [
   { code: "en", name: "English" },
@@ -220,21 +224,22 @@ const Navbar = ({ variant }) => {
                   <button type="button" className="btn sign" onClick={() => { closeMenu(); alert("You can access by upgrading your payment plan.") }}>Management System</button>
                   <button type="button" className="btn log" onClick={handleLogout}>Logout</button>
                 </div>
-                :
-                (variant === "SuperAdmin")
-                  ?
-                  <></>
-                  :
-                  (!customer && !userData) ? (
-                    <div className="nav-buttons">
-                      <button type="button" className="btn sign" onClick={() => { closeMenu(); navigate("/user/register"); }}>Sign Up</button>
-                      <button type="button" className="btn log" onClick={() => { closeMenu(); navigate("/user/login") }}>Log In</button>
-                    </div>
-                  ) : (
-                    <div className="nav-buttons">
-                      <button type="button" className="btn log" onClick={handleLogout}>Logout</button>
-                    </div>
-                  )
+                : (variant === "SuperAdmin") ? (
+                  <div className="nav-buttons">
+                    <button type="button" className="btn sa-logout" onClick={logoutSuperAdmin}>
+                      <FiLogOut size={16} /> Logout
+                    </button>
+                  </div>
+                ) : (!customer && !userData) ? (
+                  <div className="nav-buttons">
+                    <button type="button" className="btn sign" onClick={() => { closeMenu(); navigate("/user/register"); }}>Sign Up</button>
+                    <button type="button" className="btn log" onClick={() => { closeMenu(); navigate("/user/login") }}>Log In</button>
+                  </div>
+                ) : (
+                  <div className="nav-buttons">
+                    <button type="button" className="btn log" onClick={handleLogout}>Logout</button>
+                  </div>
+                )
             }
           </div>
 

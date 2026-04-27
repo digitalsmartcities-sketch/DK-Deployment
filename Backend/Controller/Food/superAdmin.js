@@ -4,6 +4,7 @@ import { getCollections, selectCollection } from "../../HelperFun/helperFun.js";
 import { deleteImage, cleanupFoodServiceImages } from "../../utils/cloudinaryCleanup.js";
 import { sendEmail } from "../../utils/emailSender.js";
 import { serviceProviderApprovalTemplate } from "../../templates/serviceProviderApprovalTemplate.js";
+import { Admins } from "../../Models/Admins.js";
 
 /* =========================================================
    CREATE FOOD ADMIN
@@ -46,8 +47,13 @@ export const CreateFoodCataAdmin = async (req, res) => {
 
             // Handle existing admin/user or create new ID
             if (admin) {
-                adminId = admin._id;
-                if (admin.role === "admin") {
+                if (admin.role?.toLowerCase() === "user" || admin.role === undefined) {
+                    await ADMINS.deleteOne({ _id: admin._id });
+                    adminId = new ObjectId();
+                    isNewAdmin = true;
+                    responseMessage = "User account upgraded to Food Admin (Fresh Start)";
+                } else {
+                    adminId = admin._id;
                     const exists = admin.Services?.some(
                         s => s.ServiceName === ServiceName && s.ServiceType === ServiceType
                     );
@@ -55,8 +61,6 @@ export const CreateFoodCataAdmin = async (req, res) => {
                         return res.json({ success: false, message: "Service already exists for this admin" });
                     }
                     responseMessage = "Service added to existing admin";
-                } else {
-                    responseMessage = "User account upgraded to Food Admin successfully";
                 }
             } else {
                 adminId = new ObjectId();
@@ -112,8 +116,8 @@ export const CreateFoodCataAdmin = async (req, res) => {
             }
 
             if (isNewAdmin) {
-                // Scenario: Entirely new admin
-                const adminObj = {
+                // Scenario: Entirely new admin (Upgraded from User)
+                const newAdmin = await Admins.create({
                     _id: adminId,
                     AdminName,
                     AdminEmail,
@@ -125,39 +129,18 @@ export const CreateFoodCataAdmin = async (req, res) => {
                     AdminPassword: reqData?.AdminPassword,
                     role: "admin",
                     Verified: true,
+                    PaymentPlan,
+                    PlanStartDate: now,
+                    PlanExpiry: expiry,
                     Services: [serviceObj],
                     Managers: [],
-                    createdAt: now,
-                    updatedAt: now
-                };
-                await ADMINS.insertOne(adminObj);
+                });
             } else {
-                // Scenario: Upgrade user OR update existing admin
-                const updateQuery = {
-                    $set: {
-                        role: "admin",
-                        AdminName,
-                        AdminEmail,
-                        location: ServiceLocation,
-                        whatsappnumber: reqData?.whatsappnumber || admin.whatsappnumber || "",
-                        phonenumber: reqData?.phonenumber || admin.phonenumber || admin.phone || "",
-                        IDCard: AdminIDCard,
-                        Status: true,
-                        AdminPassword: admin.AdminPassword || admin.password || reqData?.AdminPassword,
-                        Verified: true,
-                        updatedAt: now
-                    }
-                };
-
-                if (admin.role === "user") {
-                    // Reset services for upgraded user
-                    updateQuery.$set.Services = [serviceObj];
-                } else {
-                    // Append service for existing admin
-                    updateQuery.$push = { Services: serviceObj };
-                }
-
-                await ADMINS.updateOne({ _id: adminId }, updateQuery);
+                // Scenario: Update existing admin (Add new service)
+                await Admins.findByIdAndUpdate(adminId, {
+                    $set: { updatedAt: now },
+                    $push: { Services: serviceObj }
+                });
             }
 
             // Send confirmation email
@@ -731,9 +714,9 @@ export const DeleteTheFoodInst = async (req, res) => {
 
         // 3. Cleanup New Service Requests for this admin in this sector
         if (admin.AdminEmail) {
-            await NRs.deleteMany({ 
-                email: admin.AdminEmail, 
-                catagory: { $regex: /^food$/i } 
+            await NRs.deleteMany({
+                email: admin.AdminEmail,
+                catagory: { $regex: /^food$/i }
             });
         }
 

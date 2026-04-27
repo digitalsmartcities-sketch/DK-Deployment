@@ -403,3 +403,30 @@ export const updateEnrollmentStatus = async (req, res) => {
         res.status(500).json({ success: false, message: "Server error." });
     }
 };
+
+// Delete Enrollment (and cleanup Cloudinary image)
+export const deleteEnrollment = async (req, res) => {
+    try {
+        const { role, AccessTo: accessTo } = req.token;
+        if (role !== "SUPER_ADMIN" && !(role === "SAManager" && accessTo === "Education")) {
+            return res.status(403).json({ success: false, message: "Not authorized." });
+        }
+        const { id } = req.params;
+        const enrollment = await CourseEnrollments.findById(id);
+        if (!enrollment) return res.status(404).json({ success: false, message: "Enrollment not found." });
+
+        // Delete payment screenshot from Cloudinary
+        if (enrollment.paymentScreenshot) {
+            const publicId = getPublicIdFromUrl(enrollment.paymentScreenshot);
+            if (publicId) await deleteFromCloudinary(publicId);
+        }
+
+        // Delete record from DB
+        await CourseEnrollments.findByIdAndDelete(id);
+
+        res.json({ success: true, message: "Enrollment record and payment proof deleted successfully." });
+    } catch (err) {
+        console.error("deleteEnrollment error:", err);
+        res.status(500).json({ success: false, message: "Server error." });
+    }
+};

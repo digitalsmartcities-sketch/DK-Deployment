@@ -218,13 +218,17 @@ const EnrollmentTable = ({ data, setEnrollments }) => {
                                 <span className={`SA_plan_badge ${enr.status?.toLowerCase()}`}>{enr.status}</span>
                             </td>
                             <td>
-                                {enr.status === "Pending" && (
-                                    <div className="SA_row_actions">
-                                        <button className="SA_action_icon success" onClick={() => handleAction(enr._id, "Approved")} title="Approve"><FiCheckCircle /></button>
-                                        <button className="SA_action_icon danger" onClick={() => handleAction(enr._id, "Rejected")} title="Reject"><FiXCircle /></button>
-                                    </div>
-                                )}
+                                <div className="SA_row_actions">
+                                    {enr.status === "Pending" && (
+                                        <>
+                                            <button className="SA_action_icon success" onClick={() => handleAction(enr._id, "Approved")} title="Approve"><FiCheckCircle /></button>
+                                            <button className="SA_action_icon danger" onClick={() => handleAction(enr._id, "Rejected")} title="Reject"><FiXCircle /></button>
+                                        </>
+                                    )}
+                                    <button className="SA_action_icon danger" onClick={() => OCApi.deleteEnrollment(enr._id, setEnrollments)} title="Delete"><FiTrash2 /></button>
+                                </div>
                             </td>
+
                         </tr>
                     ))}
                 </tbody>

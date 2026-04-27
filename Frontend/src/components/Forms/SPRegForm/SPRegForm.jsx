@@ -1,6 +1,6 @@
 import { useEffect, useState, useContext } from "react";
 import "./SPRegForm.css";
-import { ServiceProviderRegistration, VerifyServiceProviderOtpApi } from "../../../ApiCalls/ApiCalls";
+import { ServiceProviderRegistration, VerifyServiceProviderOtpApi, ResendServiceProviderOtpApi } from "../../../ApiCalls/ApiCalls";
 import { AppContext } from "../../../Store/AppContext";
 import AutofillNote from "../../AutofillNote/AutofillNote";
 import { ToastContainer } from "react-toastify";
@@ -203,8 +203,19 @@ const StepTwo = ({ onBack, formData, handleChange, isSubmitting }) => (
 STEP OTP
 ===================================================== */
 
-const StepOTP = ({ email, onVerify, onBack, isSubmitting }) => {
+const StepOTP = ({ email, onVerify, onBack, isSubmitting, setIsSubmitting }) => {
   const [otp, setOtp] = useState("");
+  const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    let timer;
+    if (countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [countdown]);
 
   const handleVerify = (e) => {
     e.preventDefault();
@@ -213,6 +224,12 @@ const StepOTP = ({ email, onVerify, onBack, isSubmitting }) => {
       return;
     }
     onVerify(otp);
+  };
+
+  const handleResend = () => {
+    if (countdown > 0) return;
+    ResendServiceProviderOtpApi(email, setIsSubmitting);
+    setCountdown(60); // Reset countdown
   };
 
   return (
@@ -233,6 +250,31 @@ const StepOTP = ({ email, onVerify, onBack, isSubmitting }) => {
           required
           disabled={isSubmitting}
         />
+      </div>
+
+      <div className="resend-container" style={{ marginBottom: "20px", textAlign: "center" }}>
+        {countdown > 0 ? (
+          <p style={{ fontSize: "13px", color: "#94a3b8" }}>
+            Resend code in <span style={{ fontWeight: "600", color: "#108551" }}>{countdown}s</span>
+          </p>
+        ) : (
+          <button
+            type="button"
+            onClick={handleResend}
+            style={{
+              background: "none",
+              border: "none",
+              color: "#108551",
+              fontSize: "13px",
+              fontWeight: "600",
+              cursor: "pointer",
+              textDecoration: "underline"
+            }}
+            disabled={isSubmitting}
+          >
+            Resend Code
+          </button>
+        )}
       </div>
 
       <div className="button-row">
@@ -385,6 +427,7 @@ export const ServiceProviderRegForm = ({ setShowform, forcedCategory }) => {
               onVerify={handleOtpVerify}
               onBack={() => setVerificationRequired(false)}
               isSubmitting={isSubmitting}
+              setIsSubmitting={setIsSubmitting}
             />
           ) : step === 1 ? (
             <StepOne

@@ -59,29 +59,8 @@ export const CreateHealthCataAdmin = async (req, res) => {
 
         // ROLE UPGRADE LOGIC: Transform user to admin if needed
         if ((admin && admin.role?.toLowerCase() === "user") || (admin && admin.role === undefined)) {
-            await Admins.updateOne(
-                { _id: admin._id },
-                {
-                    $set: {
-                        role: "admin",
-                        AdminName: AdminName,
-                        AdminEmail: AdminEmail,
-                        AdminPassword: admin.password || admin.AdminPassword,
-                        location: admin.address || "",
-                        phonenumber: reqData.phonenumber || admin.phone || "",
-                        whatsappnumber: reqData.whatsappnumber || "",
-                        Verified: true,
-                        Status: true,
-                        PaymentPlan: PaymentPlan,
-                        PlanStartDate: planStartDate,
-                        PlanExpiry: planEndDate,
-                        Services: [],
-                        Managers: []
-                    }
-                }
-            );
-            // Refresh admin object
-            admin = await Admins.findById(admin._id);
+            await Admins.deleteOne({ _id: admin._id });
+            admin = null; // Set to null so that a fresh admin is created below
         }
         if (admin) {
             const featureCheck = validatePlanFeature(admin, admin.Services?.length > 0 ? "Multiple Institutes" : "Management System");
@@ -104,8 +83,10 @@ export const CreateHealthCataAdmin = async (req, res) => {
                 role: "ADMIN",
                 Status: true,
                 Verified: true,
+                location: reqData.location || "",
                 phonenumber: reqData.phonenumber,
                 whatsappnumber: reqData.whatsappnumber,
+                IDCard: reqData.IDCard || "",
                 PaymentPlan,
                 PlanStartDate: planStartDate,
                 PlanExpiry: planEndDate,
@@ -454,7 +435,7 @@ export const DeleteHealthRequest = async (req, res) => {
                 }
             },
             { $project: { adminInfo: 0 } }
-        ]).toArray();
+        ]);
 
         return res.status(200).json({
             success: true,

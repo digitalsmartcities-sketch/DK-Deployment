@@ -4,6 +4,8 @@ import { deleteImage, deleteMultipleImages } from "../../utils/cloudinaryCleanup
 import { selectCollection } from "../../HelperFun/helperFun.js";
 import { uploadToCloudinary } from "../../utils/cloudinary.js";
 import { UpdateTimingsToDb } from "../Education/Admin.js";
+import { sendEmail } from "../../utils/emailSender.js";
+import { reportResponseTemplate } from "../../templates/reportResponseTemplate.js";
 
 export { UpdateTimingsToDb };
 
@@ -152,6 +154,10 @@ export const UpdateReportStatus = async (req, res) => {
             return res.json({ success: false, message: "Food collection not found." });
         }
 
+        if (!ServiceId || !ObjectId.isValid(ServiceId)) {
+            return res.json({ success: false, message: "Session error: Invalid Service ID." });
+        }
+
         const filter = {
             _id: new ObjectId(ServiceId),
             $or: [
@@ -203,13 +209,38 @@ export const UpdateReportStatus = async (req, res) => {
 
         const updatedService = await foodColl.findOne(
             { _id: new ObjectId(ServiceId) },
-            { projection: { reports: 1 } }
+            { projection: { reports: 1, ServiceName: 1 } }
         );
+
+        if (!updatedService) {
+            return res.json({ success: false, message: "Service document not found." });
+        }
 
         const updatedReport = updatedService.reports.find(r =>
             r.id?.toString() === reportId ||
             r._id?.toString() === reportId
         );
+
+        // Send email notification to reporter if email exists
+        if (updatedReport && updatedReport.reporterEmail && updatedReport.reporterEmail !== "N/A") {
+            try {
+                const serviceName = updatedService.ServiceName || "Service";
+                const emailHtml = reportResponseTemplate(
+                    updatedReport.reporterName || "User",
+                    serviceName,
+                    status,
+                    response || updatedReport.adminResponse
+                );
+
+                await sendEmail({
+                    to: updatedReport.reporterEmail,
+                    subject: `Update on your report for ${serviceName}`,
+                    html: emailHtml
+                });
+            } catch (emailErr) {
+                console.error("Failed to send report status email:", emailErr.message);
+            }
+        }
 
         res.json({ success: true, message: `Report marked as ${status} ✅.`, report: updatedReport });
     } catch (error) {
@@ -342,5 +373,85 @@ export const UpdateFoodGallery = async (req, res) => {
     } catch (error) {
         console.error("UpdateFoodGallery error:", error);
         res.json({ success: false, message: "Failed to update gallery." });
+    }
+};
+
+// --- Reply to review ---
+export const ReplyToReview = async (req, res) => {
+    try {
+        const { ServiceId } = req.token;
+        const { reviewId, response } = req.body;
+
+        if (!reviewId || response === undefined) {
+            return res.json({ success: false, message: "reviewId and response are required." });
+        }
+
+        const foodColl = selectCollection(req, "FOOD");
+        if (!foodColl) {
+            return res.json({ success: false, message: "Food collection not found." });
+        }
+
+        // 1. Try to update in detailedReviews array
+        const result = await foodColl.updateOne(
+            { 
+                _id: new ObjectId(ServiceId),
+                "detailedReviews.id": new ObjectId(reviewId)
+            },
+            { 
+                $set: { 
+                    "detailedReviews.$.response": response,
+                    "detailedReviews.$.respondedAt": new Date()
+                } 
+            }
+        );
+
+        // 2. If not found in detailedReviews, it might be in an older or different format
+        // We also check for _id instead of id
+        if (result.matchedCount === 0) {
+            await foodColl.updateOne(
+                { 
+                    _id: new ObjectId(ServiceId),
+                    "detailedReviews._id": new ObjectId(reviewId)
+                },
+                { 
+                    $set: { 
+                        "detailedReviews.$.response": response,
+                        "detailedReviews.$.respondedAt": new Date()
+                    } 
+                }
+            );
+        }
+
+        res.json({ success: true, message: "Reply saved successfully ✅." });
+    } catch (error) {
+        console.error("ReplyToReview error:", error);
+        res.json({ success: false, message: "An error occurred while saving the reply." });
+    }
+};
+
+// --- Update Payment Settings ---
+export const UpdatePaymentSettings = async (req, res) => {
+    try {
+        const { ServiceId } = req.token;
+        const { paymentInfo } = req.body;
+
+        if (!paymentInfo) {
+            return res.json({ success: false, message: "Payment information is required." });
+        }
+
+        const foodColl = selectCollection(req, "FOOD");
+        if (!foodColl) {
+            return res.json({ success: false, message: "Food collection not found." });
+        }
+
+        await foodColl.updateOne(
+            { _id: new ObjectId(ServiceId) },
+            { $set: { paymentInfo: paymentInfo } }
+        );
+
+        res.json({ success: true, message: "Payment settings updated successfully ✅." });
+    } catch (error) {
+        console.error("UpdatePaymentSettings error:", error);
+        res.json({ success: false, message: "Failed to update payment settings." });
     }
 };

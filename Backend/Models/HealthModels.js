@@ -107,6 +107,7 @@ const SpecialistSchema = new mongoose.Schema({
             meetingLink: String,
             status: { type: String, enum: ["Pending", "Confirmed", "Rejected", "Completed"], default: "Pending" },
             appointmentNumber: String,
+            rejectionReason: String,
             createdAt: { type: Date, default: Date.now }
         }
     ],

@@ -236,6 +236,7 @@ export const ReportServiceLanding = async (req, res) => {
         const report = {
             id: new ObjectId(),
             reporterName: reporterName || "Anonymous",
+            reporterEmail: req.body.reporterEmail || "N/A",
             reason,
             details,
             ip,

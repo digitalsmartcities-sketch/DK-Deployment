@@ -24,14 +24,16 @@ export const FoodLandingPage = ({ id, Alldata }) => {
     const [isReportModalOpen, setIsReportModalOpen] = useState(false);
     const [promoCode, setPromoCode] = useState("");
     const [discount, setDiscount] = useState(0);
+    const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+    const [paymentMethod, setPaymentMethod] = useState("cod");
 
     // Review Form States
     const [selectedRating, setSelectedRating] = useState(5);
     const [hoverRating, setHoverRating] = useState(0);
 
     // Form states for pre-filling
-    const [orderForm, setOrderForm] = useState({ fullName: "", phone: "", address: "" });
-    const [bookingForm, setBookingForm] = useState({ resName: "", resContact: "" });
+    const [orderForm, setOrderForm] = useState({ fullName: "", phone: "", address: "", email: "" });
+    const [bookingForm, setBookingForm] = useState({ resName: "", resContact: "", email: "" });
     const [reviewForm, setReviewForm] = useState({ name: "", comment: "" });
     const [isReviewSubmitting, setIsReviewSubmitting] = useState(false);
 
@@ -40,11 +42,13 @@ export const FoodLandingPage = ({ id, Alldata }) => {
             setOrderForm({
                 fullName: userData.fullName || "",
                 phone: userData.phone || "",
-                address: userData.address || ""
+                address: userData.address || "",
+                email: userData.email || ""
             });
             setBookingForm({
                 resName: userData.fullName || "",
-                resContact: userData.phone || ""
+                resContact: userData.phone || "",
+                email: userData.email || ""
             });
             setReviewForm(prev => ({
                 ...prev,
@@ -170,8 +174,13 @@ export const FoodLandingPage = ({ id, Alldata }) => {
             userDetails: {
                 name: e.target.fullName.value,
                 phone: e.target.phone.value,
-                address: e.target.address.value
-            }
+                address: e.target.address.value,
+                email: e.target.email.value
+            },
+            customerEmail: e.target.email.value,
+            customerName: e.target.fullName.value,
+            customerPhone: e.target.phone.value,
+            paymentScreenshot: paymentScreenshot
         };
 
         PlaceOrderApi(orderData)
@@ -207,7 +216,8 @@ export const FoodLandingPage = ({ id, Alldata }) => {
             guests: e.target.guests.value,
             specialRequest: e.target.specialRequest.value,
             customerName: e.target.resName.value,
-            contact: e.target.resContact.value
+            contact: e.target.resContact.value,
+            email: e.target.email.value
         };
 
         BookTableApi(bookingData)
@@ -286,7 +296,8 @@ export const FoodLandingPage = ({ id, Alldata }) => {
             id,
             reason: e.target.reason.value,
             details: e.target.details.value,
-            reporterName: e.target.reporterName.value
+            reporterName: e.target.reporterName.value,
+            reporterEmail: e.target.reporterEmail.value
         };
 
         ReportServiceLandingApi(reportData)
@@ -566,15 +577,74 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                                                 <form className="order-form-side" onSubmit={handlePlaceOrder}>
                                                     <AutofillNote />
                                                     <input type="text" name="fullName" placeholder="Full Name" value={orderForm.fullName} onChange={(e) => setOrderForm({ ...orderForm, fullName: e.target.value })} required />
+                                                    <input type="email" name="email" placeholder="Email Address" value={orderForm.email} onChange={(e) => setOrderForm({ ...orderForm, email: e.target.value })} required />
                                                     <input type="tel" name="phone" placeholder="Phone Number" value={orderForm.phone} onChange={(e) => setOrderForm({ ...orderForm, phone: e.target.value })} required />
                                                     <textarea name="address" placeholder="Delivery Address" value={orderForm.address} onChange={(e) => setOrderForm({ ...orderForm, address: e.target.value })} required></textarea>
                                                     <div className="form-group-side">
                                                         <label>Payment Method</label>
-                                                        <select name="paymentMethod" required>
+                                                        <select 
+                                                            name="paymentMethod" 
+                                                            required 
+                                                            value={paymentMethod} 
+                                                            onChange={(e) => setPaymentMethod(e.target.value)}
+                                                        >
                                                             <option value="cod">Cash on Delivery</option>
                                                             <option value="online">Online Payment</option>
                                                         </select>
                                                     </div>
+
+                                                    {paymentMethod === 'online' && (
+                                                        <div className="OnlinePaymentDetails">
+                                                            <div className="PaymentAlert">
+                                                                <FaInfoCircle /> Please pay the total amount to one of the accounts below and upload the screenshot.
+                                                            </div>
+                                                            {item.paymentInfo ? (
+                                                                <div className="PaymentAccounts">
+                                                                    {item.paymentInfo.easypaisa?.number && (
+                                                                        <div className="AccountItem">
+                                                                            <span className="acc-type">EasyPaisa:</span>
+                                                                            <strong>{item.paymentInfo.easypaisa.number}</strong>
+                                                                            <small>({item.paymentInfo.easypaisa.title})</small>
+                                                                        </div>
+                                                                    )}
+                                                                    {item.paymentInfo.jazzcash?.number && (
+                                                                        <div className="AccountItem">
+                                                                            <span className="acc-type">JazzCash:</span>
+                                                                            <strong>{item.paymentInfo.jazzcash.number}</strong>
+                                                                            <small>({item.paymentInfo.jazzcash.title})</small>
+                                                                        </div>
+                                                                    )}
+                                                                    {item.paymentInfo.bank?.account && (
+                                                                        <div className="AccountItem">
+                                                                            <span className="acc-type">{item.paymentInfo.bank.bankName}:</span>
+                                                                            <strong>{item.paymentInfo.bank.account}</strong>
+                                                                            <small>({item.paymentInfo.bank.title})</small>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <p className="NoPaymentInfo">Payment details not provided by restaurant. Please contact them.</p>
+                                                            )}
+                                                            
+                                                            <div className="ScreenshotUpload">
+                                                                <label>Upload Payment Screenshot</label>
+                                                                <input 
+                                                                    type="file" 
+                                                                    accept="image/*" 
+                                                                    required={paymentMethod === 'online'}
+                                                                    onChange={(e) => {
+                                                                        const file = e.target.files[0];
+                                                                        if (file) {
+                                                                            const reader = new FileReader();
+                                                                            reader.onloadend = () => setPaymentScreenshot(reader.result);
+                                                                            reader.readAsDataURL(file);
+                                                                        }
+                                                                    }}
+                                                                />
+                                                            </div>
+                                                        </div>
+                                                    )}
+
                                                     <textarea name="specialInstructions" placeholder="Special Instructions (e.g. less spicy, extra sauce)" rows="2"></textarea>
                                                     <div className="PromoInputGroup">
                                                         <input
@@ -626,6 +696,9 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                                         <hr />
                                         <div className="form-group">
                                             <input type="text" name="resName" placeholder="Your Name" value={bookingForm.resName} onChange={(e) => setBookingForm({ ...bookingForm, resName: e.target.value })} required />
+                                        </div>
+                                        <div className="form-group">
+                                            <input type="email" name="email" placeholder="Email Address" value={bookingForm.email} onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })} required />
                                         </div>
                                         <div className="form-group">
                                             <input type="tel" name="resContact" placeholder="Contact Number" value={bookingForm.resContact} onChange={(e) => setBookingForm({ ...bookingForm, resContact: e.target.value })} required />
@@ -753,7 +826,8 @@ export const FoodLandingPage = ({ id, Alldata }) => {
                     <div className="ReportModal">
                         <h2>Report {item.name}</h2>
                         <form onSubmit={handleReportSubmit}>
-                            <input type="text" name="reporterName" placeholder="Your Name (Optional)" />
+                            <input type="text" name="reporterName" placeholder="Your Name (Optional)" defaultValue={userData?.fullName || ""} />
+                            <input type="email" name="reporterEmail" placeholder="Your Email (Required for reply)" defaultValue={userData?.email || ""} required />
                             <select name="reason" required>
                                 <option value="">Select a Reason</option>
                                 <option value="Wrong Info">Incorrect Information</option>

@@ -2,6 +2,9 @@
 // import argon2 from "argon2";
 import { ObjectId } from "mongodb";
 import { selectCollection, getCollections, resolveServiceResource, getServiceDoc } from "../../HelperFun/helperFun.js";
+import { sendEmail } from "../../utils/emailSender.js";
+import { orderStatusTemplate } from "../../templates/orderStatusTemplate.js";
+import { uploadToCloudinary } from "../../utils/cloudinary.js";
 
 
 
@@ -121,9 +124,24 @@ export const GettingFoodWholeData = async (req, res) => {
                         ratingData: serviceData.ratingData || [],
                         detailedReviews: serviceData.detailedReviews || [],
                         promotions: serviceData.promotions || [],
+                        gallery: serviceData.gallery || [],
+                        hygieneRating: serviceData.hygieneRating,
+                        verifiedBadge: serviceData.verifiedBadge,
+                        offersReservation: serviceData.offersReservation,
+                        quickInfo: {
+                            basicProfile: {
+                                name: serviceData.ServiceName || serviceData.name,
+                                location: serviceData.quickInfo?.basicProfile?.location || serviceData.location || "Kohat, KPK",
+                                type: serviceData.ServiceType || serviceData.Type || "Restaurant"
+                            },
+                            timings: serviceData.timings || serviceData.quickInfo?.timings || { opening: "10:00 AM - 11:00 PM" },
+                            facilities: serviceData.quickInfo?.facilities || serviceData.facilities || ["Dine-in", "Takeaway", "Delivery"],
+                            extraActivities: serviceData.quickInfo?.extraActivities || serviceData.extraActivities || []
+                        },
                         reportCount: serviceData.reportCount || 0,
                         reportStatus: serviceData.reportStatus || "Active",
                         reports: serviceData.reports || [],
+                        paymentInfo: serviceData.paymentInfo || null,
                     },
                     message: "Alhumdulilah Food Data Fetched ......"
                 });
@@ -163,6 +181,7 @@ export const ReportServiceLanding = async (req, res) => {
             id: new ObjectId(),
             _id: new ObjectId(), // Ensure both exist for compatibility
             reporterName: reporterName || "Anonymous",
+            reporterEmail: req.body.reporterEmail || "N/A",
             reason,
             details,
             ip,
@@ -325,11 +344,25 @@ export const PlaceOrder = async (req, res) => {
             }
         }
 
+        let screenshotUrl = null;
+        if (orderData.paymentScreenshot && typeof orderData.paymentScreenshot === "string" && orderData.paymentScreenshot.startsWith("data:image")) {
+            try {
+                const base64Data = orderData.paymentScreenshot.split(",")[1];
+                const buffer = Buffer.from(base64Data, "base64");
+                const uploadRes = await uploadToCloudinary(buffer, "orders/payments");
+                screenshotUrl = uploadRes.secure_url;
+            } catch (err) {
+                console.error("Payment screenshot upload failed:", err);
+            }
+        }
+
         const newOrder = {
             ...orderData,
             serviceId: new ObjectId(orderData.serviceId),
             createdAt: new Date(),
-            status: "Pending"
+            status: "Pending",
+            paymentScreenshot: screenshotUrl,
+            paymentVerified: false
         };
 
         const result = await ORDERS.insertOne(newOrder);
@@ -377,6 +410,24 @@ export const UpdateOrderStatus = async (req, res) => {
             { _id: new ObjectId(orderId) },
             { $set: { status } }
         );
+
+        // Notify customer via email
+        const order = await ORDERS.findOne({ _id: new ObjectId(orderId) });
+        if (order && (order.customerEmail || order.userDetails?.email)) {
+            try {
+                const targetEmail = order.customerEmail || order.userDetails?.email;
+                const customerName = order.customerName || order.userDetails?.name || "Customer";
+                const emailHtml = orderStatusTemplate(customerName, order.orderID || order._id, status);
+                
+                await sendEmail({
+                    to: targetEmail,
+                    subject: `Order Update: #${order.orderID || order._id} is now ${status}`,
+                    html: emailHtml
+                });
+            } catch (err) {
+                console.error("Failed to send order status email:", err.message);
+            }
+        }
 
         res.json({ success: true, message: "Order status updated." });
     } catch (error) {

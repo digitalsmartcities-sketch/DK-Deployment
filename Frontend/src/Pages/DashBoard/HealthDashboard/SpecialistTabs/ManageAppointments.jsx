@@ -9,14 +9,22 @@ const ManageAppointments = ({ data }) => {
     const mainURL = API_BASE_URL;
 
     const [showModal, setShowModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
     const [selectedAppId, setSelectedAppId] = useState(null);
     const [selectedAppType, setSelectedAppType] = useState("IN-CLINIC");
     const [confirmData, setConfirmData] = useState({ appointmentNumber: "", appointmentTime: "", meetingLink: "" });
+    const [rejectionReason, setRejectionReason] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const openConfirmModal = (id, type) => {
         setSelectedAppId(id);
         setSelectedAppType(type);
         setShowModal(true);
+    };
+
+    const openRejectModal = (id) => {
+        setSelectedAppId(id);
+        setShowRejectModal(true);
     };
 
     const handleConfirm = async () => {
@@ -25,6 +33,12 @@ const ManageAppointments = ({ data }) => {
             return;
         }
 
+        if (selectedAppType === "ONLINE" && !confirmData.meetingLink) {
+            toast.warn("Meeting link is mandatory for online consultation");
+            return;
+        }
+
+        setIsSubmitting(true);
         try {
             const res = await axios.put(`${mainURL}/api/specialist/appointments/status/${selectedAppId}`, {
                 status: "Confirmed",
@@ -41,12 +55,39 @@ const ManageAppointments = ({ data }) => {
             }
         } catch (err) {
             toast.error("Failed to confirm appointment");
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleReject = async () => {
+        setIsSubmitting(true);
+        try {
+            const res = await axios.put(`${mainURL}/api/specialist/appointments/status/${selectedAppId}`, {
+                status: "Rejected",
+                rejectionReason: rejectionReason
+            }, { withCredentials: true });
+
+            if (res.data.success) {
+                setAppointments(res.data.appointments);
+                toast.success("Appointment Rejected");
+                setShowRejectModal(false);
+                setRejectionReason("");
+            }
+        } catch (err) {
+            toast.error("Failed to reject appointment");
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     const updateStatus = async (id, status, type) => {
         if (status === "Confirmed") {
             openConfirmModal(id, type);
+            return;
+        }
+        if (status === "Rejected") {
+            openRejectModal(id);
             return;
         }
 
@@ -114,15 +155,22 @@ const ManageAppointments = ({ data }) => {
                                     <span>{app.message}</span>
                                 </div>
                             )}
+                            {app.status === "Rejected" && app.rejectionReason && (
+                                <div className="app-message rejection">
+                                    <FiMessageSquare />
+                                    <span>{app.rejectionReason}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="card-footer">
-                            {app.status === "Pending" && (
+                            {app.status === "Pending" ? (
                                 <>
                                     <button onClick={() => updateStatus(app._id, "Confirmed", app.consultationType)} className="btn-confirm"><FiCheck /> Confirm</button>
                                     <button onClick={() => updateStatus(app._id, "Rejected")} className="btn-reject"><FiX /> Reject</button>
                                 </>
+                            ) : (
+                                <button onClick={() => deleteAppointment(app._id)} className="btn-delete"><FiTrash2 /></button>
                             )}
-                            <button onClick={() => deleteAppointment(app._id)} className="btn-delete"><FiTrash2 /></button>
                         </div>
                     </div>
                 )) : (
@@ -168,8 +216,35 @@ const ManageAppointments = ({ data }) => {
                             </div>
                         )}
                         <div className="hlth-ds-modal-actions">
-                            <button onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
-                            <button onClick={handleConfirm} className="btn-primary">Confirm & Notify</button>
+                            <button onClick={() => setShowModal(false)} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
+                            <button onClick={handleConfirm} className="btn-primary" disabled={isSubmitting}>
+                                {isSubmitting ? "Processing..." : "Confirm & Notify"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Rejection Modal */}
+            {showRejectModal && (
+                <div className="hlth-ds-modal-overlay">
+                    <div className="hlth-ds-modal">
+                        <h4>Reject Appointment</h4>
+                        <div className="hlth-ds-input-group">
+                            <label>Reason of Rejection (Optional)</label>
+                            <textarea
+                                rows="3"
+                                placeholder="Provide a reason for rejection..."
+                                value={rejectionReason}
+                                onChange={(e) => setRejectionReason(e.target.value)}
+                                style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd" }}
+                            />
+                        </div>
+                        <div className="hlth-ds-modal-actions">
+                            <button onClick={() => { setShowRejectModal(false); setRejectionReason(""); }} className="btn-secondary" disabled={isSubmitting}>Cancel</button>
+                            <button onClick={handleReject} className="btn-reject" disabled={isSubmitting} style={{ padding: "10px 20px", borderRadius: "8px", background: isSubmitting ? "#95a5a6" : "#ff4757", color: "white", border: "none", cursor: isSubmitting ? "not-allowed" : "pointer" }}>
+                                {isSubmitting ? "Rejecting..." : "Reject Appointment"}
+                            </button>
                         </div>
                     </div>
                 </div>

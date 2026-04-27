@@ -5,6 +5,8 @@ import { AppContext } from '../../Store/AppContext';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/navbar/Navbar';
 import Footer from '../../components/footer/Footer';
+import { FaFilePdf } from 'react-icons/fa';
+import { generateOrderPDF } from '../../utils/pdfGenerator';
 import './CustomerDashboard.css';
 
 export const CustomerDashboard = () => {
@@ -165,6 +167,13 @@ export const CustomerDashboard = () => {
                                         <span className="order-status" style={{ backgroundColor: getStatusColor(order.status) }}>
                                             {order.status}
                                         </span>
+                                        <button 
+                                            className="pdf-download-btn-icon" 
+                                            onClick={() => generateOrderPDF(order, { businessName: order.businessId?.businessName })}
+                                            title="Download Receipt PDF"
+                                        >
+                                            <FaFilePdf />
+                                        </button>
                                     </div>
                                     <div className="cust-order-body">
                                         <p><strong>Business:</strong> {order.businessId?.businessName || 'Unknown'}</p>

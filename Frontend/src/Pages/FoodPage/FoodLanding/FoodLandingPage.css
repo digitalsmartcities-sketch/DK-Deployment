@@ -1452,3 +1452,91 @@
     opacity: 0.7;
     transform: none;
 }
+
+/* Online Payment Styles */
+.OnlinePaymentDetails {
+    background: #fdfdfd;
+    border: 1.5px dashed #267252;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.PaymentAlert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.PaymentAccounts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.AccountItem {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.AccountItem:last-child {
+    border-bottom: none;
+}
+
+.acc-type {
+    font-size: 0.75rem;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.AccountItem strong {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 2px 0;
+}
+
+.AccountItem small {
+    color: #267252;
+    font-weight: 600;
+}
+
+.ScreenshotUpload label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.ScreenshotUpload input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 0.8rem;
+}
+
+.NoPaymentInfo {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    text-align: center;
+    font-weight: 600;
+}
